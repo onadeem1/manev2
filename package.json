@@ -1,0 +1,8 @@
+{
+  "name": "manestream",
+  "version": "1.0.0",
+  "description": "manestream 2.0",
+  "main": "index.js",
+  "author": "Omer Nadeem <omernadeem3@gmail.com>",
+  "license": "MIT"
+}
