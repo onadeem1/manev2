@@ -1,14 +1,13 @@
-/* eslint-disable camelcase */
 const db = require('../_db');
 const { STRING, ARRAY, INTEGER, BOOLEAN, VIRTUAL } = require('sequelize');
 
 //TODO: Add full password options through bcrypt etc.
 
 const User = db.define('user', {
-  first_name: {
+  firstName: {
     type: STRING
   },
-  last_name: {
+  lastName: {
     type: STRING
   },
   username: {
@@ -35,13 +34,16 @@ const User = db.define('user', {
   friends: {
     type: ARRAY(INTEGER)
   },
-  complete_challenge_ids: { //TODO: Do we need this or will this come through association
+  completeChallenges: { //TODO: Do we need this or will this come through association
     type: ARRAY(INTEGER)
   },
-  incomeplete_challenge_ids: { //TODO: Do we need this or will this come through association
+  incomepleteChallenges: { //TODO: Do we need this or will this come through association
     type: ARRAY(INTEGER)
   },
-  given_recommendation_ids: { //TODO: Do we need this or will this come through association
+  recommendationsGiven: { //TODO: Do we need this or will this come through association
+    type: ARRAY(INTEGER)
+  },
+  recommendationsSaved: { //TODO: Do we need this or will this come through association
     type: ARRAY(INTEGER)
   },
   feed: {
