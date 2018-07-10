@@ -30,7 +30,7 @@ app.get('/', (req, res, next) => {
   res.send('WHATUPPPPPP')
 });
 
-db.sync()
+db.sync({force: true})
 .then(() => {
   console.log('DATABASE IS READY TO GO!')
   app.listen(PORT, (err) => {
