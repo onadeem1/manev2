@@ -32,9 +32,9 @@ const User = db.define('user', {
     type: STRING
   },
   friends: {
-    type: ARRAY(INTEGER)
+    type: ARRAY(INTEGER) //TODO: Create a friendship table
   },
-  completeChallenges: { //TODO: Do we need this or will this come through association
+  completeChallenges: { //TODO: Do we need this or will this come through association, create a challenges table
     type: ARRAY(INTEGER)
   },
   incomepleteChallenges: { //TODO: Do we need this or will this come through association

@@ -19,7 +19,7 @@ const Recommendation = db.define('recommendation', {
       max: 100
     }
   },
-})
+});
 
 //associations w/ each challenge belonging to a single rec?
 //also each recommendation belonging to a single place id?
