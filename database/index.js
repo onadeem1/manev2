@@ -1,9 +1,16 @@
-const db = require('./_db');
+'use strict'
 
-// set our associations and export our final models
-const User = require('./models/user')
-const Recommendation = require('./models/recommendation')
-const Place = require('./models/place')
-const Challenge = require('./models/challenge')
+const Sequelize = require('sequelize');
+const createModels = require('./models');
+
+//TODO: Change database to environment variable
+const db = new Sequelize('postgres://localhost:5432/manestream', {
+  logging: false,
+  dialect: 'postgres',
+  native: true
+});
+
+//initialize the models & place on the database object for easy destructuring access
+Object.assign(db, createModels(db));
 
 module.exports = db;
