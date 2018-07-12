@@ -1,7 +1,8 @@
-const db = require('../_db');
+'use strict'
+
 const { STRING, TEXT, INTEGER } = require('sequelize');
 
-const Recommendation = db.define('recommendation', {
+module.exports = (db) => db.define('recommendation', {
   review: {
     type: TEXT
   },
@@ -18,11 +19,11 @@ const Recommendation = db.define('recommendation', {
       min: 0,
       max: 100
     }
-  },
+  }
 });
 
-//associations w/ each challenge belonging to a single rec?
-//also each recommendation belonging to a single place id?
-
-module.exports = Recommendation;
-
+module.exports.associations = ( Recommendation, { User, Place, Challenge}) => {
+  Recommendation.belongsTo(User);
+  Recommendation.belongsTo(Place);
+  Recommendation.belongsTo(Challenge);
+}

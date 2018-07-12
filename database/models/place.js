@@ -1,7 +1,8 @@
-const db = require('../_db');
+'use strict'
+
 const { TEXT, INTEGER } = require('sequelize');
 
-const Place = db.define('place', {
+module.exports = (db) => db.define('place', {
   googleId: {
     type: INTEGER
   },
@@ -20,6 +21,7 @@ const Place = db.define('place', {
   }
 });
 
-//Add further columns to create own POI db
-
-module.exports = Place;
+module.exports.associations = ( Place, { Recommendation, Challenge }) => {
+  Place.hasMany(Recommendation);
+  Place.hasMany(Challenge);
+}

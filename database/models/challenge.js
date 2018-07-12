@@ -1,10 +1,14 @@
-const db = require('../_db');
+'use strict'
+
 const { STRING } = require('sequelize');
 
-const Challenge = db.define('challenge', {
+module.exports = (db) => db.define('challenge', {
   challengeText: {
     type: STRING
   }
 });
 
-module.exports = Challenge;
+module.exports.associations = ( Challenge, { User, UserChallenge, Recommendation }) => {
+  Challenge.hasMany(Recommendation);
+  Challenge.belongsToMany(User, { through: UserChallenge });
+};
