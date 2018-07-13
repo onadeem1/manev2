@@ -4,7 +4,7 @@ const { TEXT, INTEGER } = require('sequelize');
 
 module.exports = (db) => db.define('place', {
   googleId: {
-    type: INTEGER
+    type: TEXT
   },
   name: {
     type: TEXT

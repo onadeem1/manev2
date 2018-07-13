@@ -41,8 +41,8 @@ module.exports = (db) => db.define('user', {
   }
 });
 
-module.exports.associations = ( User, { Recommendation, Challenge, UserChallenge }) => {
-  User.belongsToMany(User, { through: 'friendships', as: 'friend'});
+module.exports.associations = ( User, { Recommendation, Challenge, UserChallenge, Friendship }) => {
+  User.belongsToMany(User, { through: Friendship, as: 'friend'});
   User.hasMany(Recommendation);
   User.belongsToMany(Challenge, { through: UserChallenge });
 };

@@ -8,7 +8,8 @@ module.exports = (db) => db.define('challenge', {
   }
 });
 
-module.exports.associations = ( Challenge, { User, UserChallenge, Recommendation }) => {
+module.exports.associations = ( Challenge, { User, UserChallenge, Recommendation, Place }) => {
   Challenge.hasMany(Recommendation);
+  Challenge.belongsTo(Place);
   Challenge.belongsToMany(User, { through: UserChallenge });
 };

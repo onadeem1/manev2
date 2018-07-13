@@ -1,9 +1,16 @@
 'use strict'
 
-const { BOOLEAN } = require('sequelize')
+const { BOOLEAN, INTEGER, TEXT } = require('sequelize')
 
 module.exports = (db) => db.define('userChallenge', {
   complete: {
-    type: BOOLEAN
+    type: BOOLEAN,
+    defaultValue: false
+  },
+  rating: {
+    type: INTEGER
+  },
+  review: {
+    type: TEXT
   }
 });
