@@ -8,7 +8,8 @@ const metaModels = {
   Place: require('./place'),
   Recommendation: require('./recommendation'),
   Challenge: require('./challenge'),
-  UserChallenge: require('./userChallenge')
+  UserChallenge: require('./userChallenge'),
+  Friendship: require('./friendship')
   // ----- Add new models here -----
 };
 
@@ -23,6 +24,8 @@ const createModels = (db) => {
       associations.call(metaModels[name], models[name], models);
     }
   });
+
+  return models;
 };
 
 module.exports = createModels;
