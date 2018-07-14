@@ -5,14 +5,23 @@
   "main": "index.js",
   "author": "Omer Nadeem <omernadeem3@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "start": "node server/index.js",
+    "start-watch": "nodemon server/index.js --watch server --watch database --watch package.json",
+    "start-dev": "cross-env NODE_ENV=development npm run start-watch"
+  },
   "dependencies": {
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
     "lodash": "^4.17.10",
-    "morgan": "^1.9.0",
     "pg": "^7.4.3",
     "pg-hstore": "^2.3.2",
     "pg-native": "^3.0.0",
     "sequelize": "^4.38.0"
+  },
+  "devDependencies": {
+    "cross-env": "^5.2.0",
+    "morgan": "^1.9.0",
+    "nodemon": "^1.18.2"
   }
 }

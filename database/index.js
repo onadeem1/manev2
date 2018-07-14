@@ -2,9 +2,9 @@
 
 const Sequelize = require('sequelize');
 const createModels = require('./models');
+const databaseURL = process.env.DATABASE_URL || `postgres://localhost:5432/manestream`
 
-//TODO: Change database to environment variable
-const db = new Sequelize('postgres://localhost:5432/manestream', {
+const db = new Sequelize(databaseURL, {
   logging: false,
   dialect: 'postgres',
   native: true
