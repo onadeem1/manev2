@@ -1,6 +1,4 @@
-'use strict'
-
-const { mapValues } = require('lodash');
+const { mapValues } = require('lodash')
 
 //use meta-model structure to help avoid cyclic dependencies
 const metaModels = {
@@ -11,21 +9,21 @@ const metaModels = {
   UserChallenge: require('./userChallenge'),
   Friendship: require('./friendship')
   // ----- Add new models here -----
-};
+}
 
-const createModels = (db) => {
+const createModels = db => {
   //create the actual model classes by passing in the database to each metamodel
-  const models = mapValues(metaModels, defineModel => defineModel(db));
+  const models = mapValues(metaModels, defineModel => defineModel(db))
 
   //create association classes - if an 'associations' method is exported pass in the defined models
   Object.keys(metaModels).forEach(name => {
-    const { associations } = metaModels[name];
+    const { associations } = metaModels[name]
     if (typeof associations === 'function') {
-      associations.call(metaModels[name], models[name], models);
+      associations.call(metaModels[name], models[name], models)
     }
-  });
+  })
 
-  return models;
-};
+  return models
+}
 
-module.exports = createModels;
+module.exports = createModels

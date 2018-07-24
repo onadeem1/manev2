@@ -1,27 +1,26 @@
-'use strict'
+const { TEXT, INTEGER } = require('sequelize')
 
-const { TEXT, INTEGER } = require('sequelize');
-
-module.exports = (db) => db.define('place', {
-  googleId: {
-    type: TEXT
-  },
-  name: {
-    type: TEXT
-  },
-  address: {
-    type: TEXT
-  },
-  phone: {
-    type: INTEGER,
-    unique: true,
-    validate: {
-      isNumeric: true,
+module.exports = db =>
+  db.define('place', {
+    googleId: {
+      type: TEXT
+    },
+    name: {
+      type: TEXT
+    },
+    address: {
+      type: TEXT
+    },
+    phone: {
+      type: INTEGER,
+      unique: true,
+      validate: {
+        isNumeric: true
+      }
     }
-  }
-});
+  })
 
-module.exports.associations = ( Place, { Recommendation, Challenge }) => {
-  Place.hasMany(Recommendation);
-  Place.hasMany(Challenge);
+module.exports.associations = (Place, { Recommendation, Challenge }) => {
+  Place.hasMany(Recommendation)
+  Place.hasMany(Challenge)
 }
