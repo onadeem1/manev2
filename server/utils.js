@@ -1,0 +1,7 @@
+//wrap every async function in a handler to preventing repeatedly writing try/catch
+const asyncUtil = fn =>
+  function asyncUtilWrap(req, res, next, ...args) {
+    const fnReturn = fn(req, res, next, ...args)
+    return Promise.resolve(fnReturn).catch(next)
+  }
+module.exports = asyncUtil
