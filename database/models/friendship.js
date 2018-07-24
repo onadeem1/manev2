@@ -1,11 +1,16 @@
-'use strict'
-
 const { BOOLEAN } = require('sequelize')
 
-module.exports = (db) => db.define('friendship', {
-  accepted: {
-    type: BOOLEAN,
-    defaultValue: false
-  }
-});
+module.exports = db => {
+  let Friendship = db.define('friendship', {
+    accepted: {
+      type: BOOLEAN,
+      defaultValue: false
+    },
+    originalRequest: {
+      type: BOOLEAN,
+      defaultValue: false
+    }
+  })
 
+  return Friendship
+}
