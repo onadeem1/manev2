@@ -1,7 +1,4 @@
-const router = require('express').Router();
+const router = require('express').Router()
+module.exports = router
 
-router.get('/', (req, res, next) => {
-  console.log('require out the routers!')
-});
-
-module.exports = router;
+router.use('/users', require('./users'))
