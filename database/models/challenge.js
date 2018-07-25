@@ -7,9 +7,8 @@ module.exports = db =>
     }
   })
 
-module.exports.associations = (Challenge, { User, UserChallenge, Recommendation, Place }) => {
+module.exports.associations = (Challenge, { User, Recommendation, Place }) => {
   Challenge.hasMany(Recommendation)
-  Challenge.hasOne(Recommendation, { as: 'originalRecommendation' })
   Challenge.belongsTo(Place)
-  Challenge.belongsToMany(User, { through: UserChallenge })
+  Challenge.belongsTo(User, { as: 'challengeCreator' })
 }

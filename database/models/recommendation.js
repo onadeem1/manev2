@@ -1,4 +1,4 @@
-const { STRING, TEXT, INTEGER } = require('sequelize')
+const { STRING, TEXT, INTEGER, BOOLEAN } = require('sequelize')
 
 module.exports = db =>
   db.define('recommendation', {
@@ -18,6 +18,10 @@ module.exports = db =>
         min: 0,
         max: 100
       }
+    },
+    complete: {
+      type: BOOLEAN,
+      defaultValue: false
     }
   })
 

@@ -1,5 +1,5 @@
 const db = require('./index')
-const { User, Place, Recommendation, Challenge, UserChallenge, Friendship, Promise } = db
+const { User, Place, Recommendation, Challenge, Friendship, Promise } = db
 
 //dummy data, functions that return objects for use in seed function, edit to add/remove seed data
 const usersData = () => ({
@@ -181,30 +181,42 @@ const placesData = () => ({
   }
 })
 
-const challengesData = ({ places }) => ({
+const challengesData = ({ places, users }) => ({
   'grandma slice': {
     placeId: places.raimos.id,
-    challengeText: 'try the grandma slice'
+    challengeText: 'try the grandma slice',
+    userId: users.zoby.id,
+    challengeCreatorId: users.zoby.id
   },
   'chicken shack': {
     placeId: places.shakeShack.id,
-    challengeText: 'the new chicken shack is better than the original!'
+    challengeText: 'the new chicken shack is better than the original!',
+    userId: users.omer.id,
+    challengeCreatorId: users.omer.id
   },
   'old fashioned': {
     placeId: places.theShed.id,
-    challengeText: 'old fashioned w/ brunch is the way to go'
+    challengeText: 'old fashioned w/ brunch is the way to go',
+    userId: users.maryam.id,
+    challengeCreatorId: users.maryam.id
   },
   'dance at the club': {
     placeId: places['205club'].id,
-    challengeText: 'dance the night away to some underground hip hop'
+    challengeText: 'dance the night away to some underground hip hop',
+    userId: users.omer.id,
+    challengeCreatorId: users.omer.id
   },
   'walk the bridge': {
     placeId: places.brooklynBridge.id,
-    challengeText: 'see the most eclectic crowd in new york while you walk across the bridge'
+    challengeText: 'see the most eclectic crowd in new york while you walk across the bridge',
+    userId: users.zain.id,
+    challengeCreatorId: users.zain.id
   },
   jetty: {
     placeId: places.jetty.id,
-    challengeText: 'hit then beach then have the best apps in LB'
+    challengeText: 'hit then beach then have the best apps in LB',
+    userId: users.danish.id,
+    challengeCreatorId: users.danish.id
   }
 })
 
@@ -215,7 +227,8 @@ const recommendationsData = ({ users, places, challenges }) => ({
     rating: 93,
     userId: users.zoby.id,
     placeId: places.raimos.id,
-    challengeId: challenges['grandma slice'].id
+    challengeId: challenges['grandma slice'].id,
+    complete: true
   },
   'shack shack is the goat': {
     review: 'still the best burger in new york but the chicken shack might be even better',
@@ -223,7 +236,8 @@ const recommendationsData = ({ users, places, challenges }) => ({
     rating: 99,
     userId: users.omer.id,
     placeId: places.shakeShack.id,
-    challengeId: challenges['chicken shack'].id
+    challengeId: challenges['chicken shack'].id,
+    complete: true
   },
   'the shed for brunch': {
     review:
@@ -233,7 +247,8 @@ const recommendationsData = ({ users, places, challenges }) => ({
     rating: 88,
     userId: users.maryam.id,
     placeId: places.theShed.id,
-    challengeId: challenges['old fashioned'].id
+    challengeId: challenges['old fashioned'].id,
+    complete: true
   },
   'underground hip hop': {
     review:
@@ -242,7 +257,8 @@ const recommendationsData = ({ users, places, challenges }) => ({
     rating: 78,
     userId: users.omer.id,
     placeId: places['205club'].id,
-    challengeId: challenges['dance at the club'].id
+    challengeId: challenges['dance at the club'].id,
+    complete: true
   },
   'brooklyn bridge walk': {
     review:
@@ -252,7 +268,8 @@ const recommendationsData = ({ users, places, challenges }) => ({
     rating: 68,
     userId: users.zain.id,
     placeId: places.brooklynBridge.id,
-    challengeId: challenges['walk the bridge'].id
+    challengeId: challenges['walk the bridge'].id,
+    complete: true
   },
   jetty: {
     review:
@@ -261,23 +278,24 @@ const recommendationsData = ({ users, places, challenges }) => ({
     rating: 94,
     userId: users.danish.id,
     placeId: places.jetty.id,
-    challengeId: challenges['jetty'].id
-  }
-})
-
-const userChallengesData = ({ users, challenges }) => ({
+    challengeId: challenges['jetty'].id,
+    complete: true
+  },
   'omer accepts zoby raimo challenge': {
     userId: users.omer.id,
+    placeId: places.raimos.id,
     challengeId: challenges['grandma slice'].id
   },
   'omer accepts maryam shed challenge': {
     userId: users.omer.id,
+    placeId: places.theShed.id,
     challengeId: challenges['old fashioned'].id
   },
   'omer completes zain brooklyn bridge challenge': {
     userId: users.omer.id,
     challengeId: challenges['walk the bridge'].id,
     rating: 88,
+    placeId: places.brooklynBridge.id,
     review: 'loved it beautiful day, sorry zain I disagree brooklyn is awesome',
     complete: true
   },
@@ -285,6 +303,7 @@ const userChallengesData = ({ users, challenges }) => ({
     userId: users.zain.id,
     challengeId: challenges['grandma slice'].id,
     rating: 39,
+    placeId: places.raimos.id,
     review: 'zoby this was awful what are you thinking',
     complete: true
   },
@@ -296,6 +315,7 @@ const userChallengesData = ({ users, challenges }) => ({
     userId: users.zoby.id,
     challengeId: challenges['dance at the club'].id,
     rating: 44,
+    placeId: places['205club'].id,
     review: 'never heard any of these songs, why not just play Drake?',
     complete: true
   },
@@ -303,6 +323,7 @@ const userChallengesData = ({ users, challenges }) => ({
     userId: users.zoby.id,
     challengeId: challenges['walk the bridge'].id,
     rating: 91,
+    placeId: places.brooklynBridge.id,
     review: 'I agree with Omer this was super nice, a little rit made it quite nice',
     complete: true
   },
@@ -310,12 +331,14 @@ const userChallengesData = ({ users, challenges }) => ({
     userId: users.maryam.id,
     challengeId: challenges['dance at the club'].id,
     rating: 85,
+    placeId: places['205club'].id,
     review:
       'OMG this was like hearing a TRL playlist, just wish there was room to break it down :)',
     complete: true
   },
   'maryam accepts zain brooklyn bridge challenge': {
     userId: users.maryam.id,
+    placeId: places.brooklynBridge.id,
     challengeId: challenges['walk the bridge'].id
   }
 })
@@ -326,7 +349,6 @@ const seedFriendships = createSeed(Friendship, friendshipsData)
 const seedPlaces = createSeed(Place, placesData)
 const seedChallenges = createSeed(Challenge, challengesData)
 const seedRecomendations = createSeed(Recommendation, recommendationsData)
-const seedUserChallenges = createSeed(UserChallenge, userChallengesData)
 
 /* createSeed Function Info
     seed(Model: Sequelize.Model, dataCreator: Function) ->
@@ -365,7 +387,6 @@ async function seed() {
   seeded.friendships = await seedFriendships(seeded)
   seeded.challenges = await seedChallenges(seeded)
   seeded.recommendations = await seedRecomendations(seeded)
-  seeded.userChallenges = await seedUserChallenges(seeded)
 }
 
 async function runSeed() {

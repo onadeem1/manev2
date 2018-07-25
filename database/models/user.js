@@ -61,13 +61,6 @@ module.exports = db => {
   }
 
   //class methods
-  User.associations = (User, { Recommendation, Challenge, UserChallenge, Friendship }) => {
-    User.belongsToMany(User, { through: Friendship, as: 'friends' })
-    User.hasMany(Recommendation)
-    User.hasMany(Challenge, { as: 'challengeCreator' })
-    User.belongsToMany(Challenge, { through: UserChallenge })
-  }
-
   User.generateSalt = function() {
     return crypto.randomBytes(16).toString('base64')
   }
@@ -92,4 +85,11 @@ module.exports = db => {
   User.beforeUpdate(setSaltAndPassword)
 
   return User
+}
+
+module.exports.associations = (User, { Recommendation, Challenge, Friendship }) => {
+  User.belongsToMany(User, { through: Friendship, as: 'friends' })
+  User.hasMany(Recommendation, { as: 'completedChallenges' })
+  User.hasMany(Recommendation, { as: 'incompleteChallenges' })
+  User.hasMany(Challenge, { as: 'challengesCreated' })
 }
