@@ -1,9 +1,8 @@
 const db = require('./index')
 const { User, Place, Recommendation, Challenge, UserChallenge, Friendship, Promise } = db
-const { mapValues } = require('lodash')
 
-//dummy data
-const usersSeed = seed(User, {
+//dummy data, functions that return objects for use in seed function, edit to add/remove seed data
+const usersData = () => ({
   omer: {
     firstName: 'Omer',
     lastName: 'Nadeem',
@@ -72,78 +71,7 @@ const usersSeed = seed(User, {
   }
 })
 
-const placesSeed = seed(Place, {
-  raimos: {
-    googleId: 'ChIJk6AC-aKBwokRObblm9-hwQ43037',
-    name: 'Raimos'
-  },
-  shakeShack: {
-    googleId: 'ChIJ8z9-54GHwokRpf3Gukw8ufM',
-    name: 'Shack Shack'
-  },
-  theShed: {
-    googleId: 'ChIJP_rMqXko6IkRBdEw9BhYXyQ54',
-    name: 'The Shed'
-  },
-  '205club': {
-    googleId: 'ChIJne9SzYVZwokRGJ8wLdz9tos',
-    name: '205 Club'
-  },
-  brooklynBridge: {
-    googleId:
-      'EihCcm9va2x5biBCcmlkZ2UsIE5ldyBZb3JrLCBOWSAxMDAzOCwgVVNBIkgqRgoUChIJlenDaDpawokRDB4kyfcPdxYSFAoSCamlI_HwS8xMEWeVGN7Bxs_dGhgKCg3PwUEYFdRR5dMSCg2F_EIYFbtc5tM',
-    name: 'Brooklyn Bridge'
-  },
-  jetty: {
-    googleId: 'ChIJH_nbjo9vwokRWod0pSkrh54',
-    name: 'Jetty Bar & Grill'
-  }
-})
-
-const challengesSeed = seed(Challenge, ({ places }) => ({
-  /* Why we use a function as an argument in the seed function
-
-    We're specifying a function here, rather than just a rows object.
-    Using a function lets us receive the previously-seeded rows (the seed
-    function does this wiring for us).
-
-    This lets us reference previously-created rows in order to create the join
-    rows. We can reference them by the names we used above (which is why we used
-    Objects above, rather than just arrays).
-
-    The easiest way to seed associations seems to be to just create rows
-    in the join table.
-
-    places.raimos is an instance of the places model that we created in the user seed above.
-    The seed function wires the promises so that it'll have been created already. Same thing for things.
-*/
-  'grandma slice': {
-    placeId: places.raimos.id,
-    challengeText: 'try the grandma slice'
-  },
-  'chicken shack': {
-    placeId: places.shakeShack.id,
-    challengeText: 'the new chicken shack is better than the original!'
-  },
-  'old fashioned': {
-    placeId: places.theShed.id,
-    challengeText: 'old fashioned w/ brunch is the way to go'
-  },
-  'dance at the club': {
-    placeId: places['205club'].id,
-    challengeText: 'dance the night away to some underground hip hop'
-  },
-  'walk the bridge': {
-    placeId: places.brooklynBridge.id,
-    challengeText: 'see the most eclectic crowd in new york while you walk across the bridge'
-  },
-  jetty: {
-    placeId: places.jetty.id,
-    challengeText: 'hit then beach then have the best apps in LB'
-  }
-}))
-
-const friendshipsSeed = seed(Friendship, ({ users }) => ({
+const friendshipsData = ({ users }) => ({
   'omer-zain are friends': {
     userId: users.omer.id,
     friendId: users.zain.id,
@@ -223,9 +151,64 @@ const friendshipsSeed = seed(Friendship, ({ users }) => ({
     userId: users.danish.id,
     friendId: users.zain.id
   }
-}))
+})
 
-const recommendationsSeed = seed(Recommendation, ({ users, places, challenges }) => ({
+const placesData = () => ({
+  raimos: {
+    googleId: 'ChIJk6AC-aKBwokRObblm9-hwQ43037',
+    name: 'Raimos'
+  },
+  shakeShack: {
+    googleId: 'ChIJ8z9-54GHwokRpf3Gukw8ufM',
+    name: 'Shack Shack'
+  },
+  theShed: {
+    googleId: 'ChIJP_rMqXko6IkRBdEw9BhYXyQ54',
+    name: 'The Shed'
+  },
+  '205club': {
+    googleId: 'ChIJne9SzYVZwokRGJ8wLdz9tos',
+    name: '205 Club'
+  },
+  brooklynBridge: {
+    googleId:
+      'EihCcm9va2x5biBCcmlkZ2UsIE5ldyBZb3JrLCBOWSAxMDAzOCwgVVNBIkgqRgoUChIJlenDaDpawokRDB4kyfcPdxYSFAoSCamlI_HwS8xMEWeVGN7Bxs_dGhgKCg3PwUEYFdRR5dMSCg2F_EIYFbtc5tM',
+    name: 'Brooklyn Bridge'
+  },
+  jetty: {
+    googleId: 'ChIJH_nbjo9vwokRWod0pSkrh54',
+    name: 'Jetty Bar & Grill'
+  }
+})
+
+const challengesData = ({ places }) => ({
+  'grandma slice': {
+    placeId: places.raimos.id,
+    challengeText: 'try the grandma slice'
+  },
+  'chicken shack': {
+    placeId: places.shakeShack.id,
+    challengeText: 'the new chicken shack is better than the original!'
+  },
+  'old fashioned': {
+    placeId: places.theShed.id,
+    challengeText: 'old fashioned w/ brunch is the way to go'
+  },
+  'dance at the club': {
+    placeId: places['205club'].id,
+    challengeText: 'dance the night away to some underground hip hop'
+  },
+  'walk the bridge': {
+    placeId: places.brooklynBridge.id,
+    challengeText: 'see the most eclectic crowd in new york while you walk across the bridge'
+  },
+  jetty: {
+    placeId: places.jetty.id,
+    challengeText: 'hit then beach then have the best apps in LB'
+  }
+})
+
+const recommendationsData = ({ users, places, challenges }) => ({
   'raimos is amazing': {
     review: 'great setting, authentic italian vibe, food was delicious, must try the grandma',
     picture: 'https://c1.staticflickr.com/9/8189/8354014819_3f8fc8668f_b.jpg',
@@ -280,9 +263,9 @@ const recommendationsSeed = seed(Recommendation, ({ users, places, challenges })
     placeId: places.jetty.id,
     challengeId: challenges['jetty'].id
   }
-}))
+})
 
-const userChallengesSeed = seed(UserChallenge, ({ users, challenges }) => ({
+const userChallengesData = ({ users, challenges }) => ({
   'omer accepts zoby raimo challenge': {
     userId: users.omer.id,
     challengeId: challenges['grandma slice'].id
@@ -335,93 +318,76 @@ const userChallengesSeed = seed(UserChallenge, ({ users, challenges }) => ({
     userId: users.maryam.id,
     challengeId: challenges['walk the bridge'].id
   }
-}))
+})
 
-//seed function error handler
-class BadRow extends Error {
-  constructor(key, row, error) {
-    super(error)
-    this.cause = error
-    this.row = row
-    this.key = key
-  }
-  toString() {
-    return `[${this.key}] ${this.cause} while creating ${JSON.stringify(this.row, 0, 2)}`
-  }
-}
+//seed Creators, only edit if associations change
+const seedUsers = createSeed(User, usersData)
+const seedFriendships = createSeed(Friendship, friendshipsData)
+const seedPlaces = createSeed(Place, placesData)
+const seedChallenges = createSeed(Challenge, challengesData)
+const seedRecomendations = createSeed(Recommendation, recommendationsData)
+const seedUserChallenges = createSeed(UserChallenge, userChallengesData)
 
-/* Seed Function Info
-    seed(Model: Sequelize.Model, rows: Function|Object) ->
-    (others?: {...Function|Object}) -> Promise<Seeded>
+/* createSeed Function Info
+    seed(Model: Sequelize.Model, dataCreator: Function) ->
+    (associatedModels: Object) -> Promise<Seeded>
 
-    Takes a model and either an Object describing rows to insert,
-    or a function that when called, returns rows to insert. returns
-    a function that will seed the DB when called and resolve with
+    Takes a model and a function that when called, returns rows to insert.
+    returns a function that will seed the DB when called and resolve with
     a Promise of the object of all seeded rows.
 
     The function form can be used to initialize rows that reference
     other models.
 */
-function seed(Model, rows) {
-  return (others = {}) => {
-    if (typeof rows === 'function') {
-      rows = Promise.props(
-        mapValues(
-          others,
-          (
-            other // Is other a function? If so, call it. Otherwise, leave it alone.
-          ) => (typeof other === 'function' ? other() : other)
-        )
-      ).then(rows)
+function createSeed(Model, dataCreator) {
+  return async associatedModels => {
+    try {
+      const modelRows = dataCreator(associatedModels)
+      const rowKeys = Object.keys(modelRows)
+      const modelRowsCreated = await Promise.map(rowKeys, rowKey => Model.create(modelRows[rowKey]))
+      console.log(`Seeded ${modelRowsCreated.length} ${Model.name} OK`)
+      return modelRowsCreated.reduce((modelObj, currentRow, index) => {
+        //place items back in original object formatting after creation for access by other tables
+        return Object.assign({}, modelObj, { [rowKeys[index]]: modelRowsCreated[index] })
+      }, {})
+    } catch (error) {
+      console.error(`Error seeding ${Model.name}: ${error} \n${error.stack}`)
     }
-
-    return Promise.resolve(rows)
-      .then(rows =>
-        Promise.props(
-          Object.keys(rows)
-            .map(key => {
-              const row = rows[key]
-              return {
-                key,
-                value: Promise.props(row).then(row =>
-                  Model.create(row).catch(error => {
-                    throw new BadRow(key, row, error)
-                  })
-                )
-              }
-            })
-            .reduce((all, one) => Object.assign({}, all, { [one.key]: one.value }), {})
-        )
-      )
-      .then(seeded => {
-        console.log(`Seeded ${Object.keys(seeded).length} ${Model.name} OK`)
-        return seeded
-      })
-      .catch(error => {
-        console.error(`Error seeding ${Model.name}: ${error} \n${error.stack}`)
-      })
   }
 }
 
-function seedEverything() {
-  const seeded = {}
-
-  seeded.users = usersSeed()
-  seeded.places = placesSeed()
-  seeded.friendships = friendshipsSeed(seeded)
-  seeded.challenges = challengesSeed(seeded)
-  seeded.userChallenges = userChallengesSeed(seeded)
-  seeded.recommendations = recommendationsSeed(seeded)
-
-  return Promise.props(seeded)
+//actual process of seeding/modifying the database happens in this function
+async function seed() {
+  await db.sync({ force: true })
+  let seeded = {}
+  seeded.users = await seedUsers()
+  seeded.places = await seedPlaces()
+  seeded.friendships = await seedFriendships(seeded)
+  seeded.challenges = await seedChallenges(seeded)
+  seeded.recommendations = await seedRecomendations(seeded)
+  seeded.userChallenges = await seedUserChallenges(seeded)
 }
 
+async function runSeed() {
+  console.log('seeding...')
+  try {
+    await seed()
+  } catch (err) {
+    console.error(err)
+    process.exitCode = 1
+  } finally {
+    console.log('closing db connection')
+    await db.close()
+    console.log('db connection closed')
+  }
+}
+
+// Execute the `seed` function, IF we ran this module directly (`node seed`).
+// `Async` functions always return a promise, so we can use `catch` to handle
+// any errors that might occur inside of `seed`.
 if (module === require.main) {
-  db
-    .sync({ force: true })
-    .then(seedEverything)
-    .finally(() => process.exit(0))
+  runSeed()
 }
 
-// module.exports = Object.assign(seed, {users, places, challenges, friendships, recommendations, userChallenges});
-module.exports = seedEverything
+// we export the seed function for testing purposes (see `./seed.spec.js`)
+module.exports = seed
