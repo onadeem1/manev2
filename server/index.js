@@ -1,6 +1,10 @@
 const express = require('express')
 const morgan = require('morgan')
+const session = require('express-session')
+const passport = require('passport')
+const SequelizeStore = require('connect-session-sequelize')(session.Store)
 const db = require('../database')
+const sessionStore = new SequelizeStore({ db })
 
 //initiating express application
 const app = express()
@@ -8,12 +12,39 @@ const app = express()
 //port environment variable used for deployment
 const PORT = process.env.PORT || 3000
 
+//require in necessary environment variables
+if (process.env.NODE_ENV !== 'production') require('../secrets')
+
+// passport registration
+passport.serializeUser((user, done) => done(null, user.id))
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await db.models.user.findById(id)
+    done(null, user)
+  } catch (err) {
+    done(err)
+  }
+})
+
 //logging middleware
 app.use(morgan('dev'))
 
 //bodyParser middleware
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'Who goes there?',
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false
+  })
+)
+
+app.use(passport.initialize())
+app.use(passport.session())
 
 // re-direct api routes
 app.use('/api', require('./api'))

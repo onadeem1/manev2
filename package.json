@@ -15,8 +15,12 @@
     "start-dev": "cross-env NODE_ENV=development npm run start-watch"
   },
   "dependencies": {
+    "connect-session-sequelize": "^5.2.2",
     "express": "^4.16.3",
+    "express-session": "^1.15.6",
     "lodash": "^4.17.10",
+    "passport": "^0.4.0",
+    "passport-google-oauth": "^1.0.0",
     "pg": "^7.4.3",
     "pg-hstore": "^2.3.2",
     "pg-native": "^3.0.0",
