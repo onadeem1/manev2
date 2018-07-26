@@ -1,5 +1,6 @@
 const express = require('express')
 const morgan = require('morgan')
+const compression = require('compression')
 const session = require('express-session')
 const passport = require('passport')
 const SequelizeStore = require('connect-session-sequelize')(session.Store)
@@ -12,8 +13,13 @@ const app = express()
 //port environment variable used for deployment
 const PORT = process.env.PORT || 3000
 
+//global Mocha hook used for resource cleanup, otherwise Mocha never quits after tests
+if (process.env.NODE_ENV === 'test') {
+  after('close the session store', () => sessionStore.stopExpiringSessions())
+}
+
 //require in necessary environment variables
-if (process.env.NODE_ENV !== 'production') require('../secrets')
+if (process.env.NODE_ENV === 'development') require('../secrets')
 
 // passport registration
 passport.serializeUser((user, done) => done(null, user.id))
@@ -27,34 +33,39 @@ passport.deserializeUser(async (id, done) => {
   }
 })
 
-//logging middleware
-app.use(morgan('dev'))
+const createApp = () => {
+  //logging middleware
+  app.use(morgan('dev'))
 
-//bodyParser middleware
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+  //bodyParser middleware
+  app.use(express.json())
+  app.use(express.urlencoded({ extended: true }))
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || 'Who goes there?',
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false
+  // compression middleware
+  app.use(compression())
+
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET,
+      store: sessionStore,
+      resave: false,
+      saveUninitialized: false
+    })
+  )
+
+  app.use(passport.initialize())
+  app.use(passport.session())
+
+  // re-direct api routes
+  app.use('/api', require('./api'))
+
+  //Error Handler
+  app.use((err, req, res, next) => {
+    console.error(err)
+    console.error(err.stack)
+    res.status(err.status || 500).send(err.message || 'Internal Server Error')
   })
-)
-
-app.use(passport.initialize())
-app.use(passport.session())
-
-// re-direct api routes
-app.use('/api', require('./api'))
-
-//Error Handler
-app.use((err, req, res, next) => {
-  console.error(err)
-  console.error(err.stack)
-  res.status(err.status || 500).send(err.message || 'Internal Server Error')
-})
+}
 
 //start functions
 const syncDb = () => db.sync().then(() => console.log('Database has been synced!'))
@@ -67,8 +78,14 @@ const startServer = () => {
 }
 
 async function bootApp() {
+  await sessionStore.sync()
   await syncDb()
+  await createApp()
   await startServer()
 }
 
-bootApp()
+if (require.main === module) {
+  bootApp()
+} else {
+  createApp()
+}
