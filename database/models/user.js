@@ -2,7 +2,7 @@ const crypto = require('crypto')
 const { STRING, ARRAY, INTEGER, BOOLEAN } = require('sequelize')
 
 module.exports = db => {
-  let User = db.define('user', {
+  const User = db.define('user', {
     firstName: {
       type: STRING
     },
@@ -58,6 +58,19 @@ module.exports = db => {
   //instance methods
   User.prototype.correctPassword = function(candidatePwd) {
     return User.encryptPassword(candidatePwd, this.salt()) === this.password()
+  }
+
+  User.prototype.getFriendIds = async function() {
+    const friends = await this.getFriends({
+      attributes: ['id'],
+      through: { where: { accepted: true } }
+    })
+    const friendIds = friends.map(friend => friend.id)
+    return friendIds
+  }
+
+  User.prototype.getFriendAndUserIds = async function() {
+    return [this.id, ...(await this.getFriendIds())]
   }
 
   //class methods
