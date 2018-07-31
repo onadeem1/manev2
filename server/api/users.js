@@ -33,7 +33,7 @@ router.param(
       err.status = 404
       throw err
     } else {
-      req.user = currentUser
+      req.requestedUser = currentUser
       next()
     }
   })
@@ -41,14 +41,14 @@ router.param(
 
 //get user
 router.get('/:id', (req, res, next) => {
-  res.json(req.user)
+  res.json(req.requestedUser)
 })
 
 //update user
 router.put(
   '/:id',
   asyncHandler(async (req, res, next) => {
-    const updatedUser = await req.user.update(req.body)
+    const updatedUser = await req.requestedUser.update(req.body)
     res.status(200).json(updatedUser)
   })
 )
@@ -57,7 +57,7 @@ router.put(
 router.delete(
   '/:id',
   asyncHandler(async (req, res, next) => {
-    await req.user.destroy()
+    await req.requestedUser.destroy()
     res.status(204).end()
   })
 )

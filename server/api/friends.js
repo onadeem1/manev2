@@ -7,7 +7,7 @@ module.exports = router
 router.get(
   '/',
   asyncHandler(async (req, res, next) => {
-    const friends = await req.user.getFriends({
+    const friends = await req.requestedUser.getFriends({
       through: {
         where: {
           accepted: true
@@ -22,7 +22,7 @@ router.get(
 router.get(
   '/requests',
   asyncHandler(async (req, res, next) => {
-    const friendRequests = await req.user.getFriends({
+    const friendRequests = await req.requestedUser.getFriends({
       through: {
         where: {
           accepted: false,
@@ -38,7 +38,7 @@ router.get(
 router.get(
   '/requested',
   asyncHandler(async (req, res, next) => {
-    const friendRequests = await req.user.getFriends({
+    const friendRequests = await req.requestedUser.getFriends({
       through: {
         where: {
           accepted: false,
@@ -55,10 +55,10 @@ router.post(
   '/add',
   asyncHandler(async (req, res, next) => {
     const friend = await User.findById(req.body.friendId)
-    const userFriendRequest = await req.user.addFriend(friend, {
+    const userFriendRequest = await req.requestedUser.addFriend(friend, {
       through: { originalRequest: true }
     })
-    const friendAddUser = await friend.addFriend(req.user)
+    const friendAddUser = await friend.addFriend(req.requestedUser)
     res.status(201).json([userFriendRequest[0], friendAddUser[0]])
   })
 )
@@ -73,8 +73,8 @@ router.put(
         returning: true,
         where: {
           [Op.or]: [
-            { userId: req.user.id, friendId: +req.body.friendId },
-            { userId: +req.body.friendId, friendId: req.user.id }
+            { userId: req.requestedUser.id, friendId: +req.body.friendId },
+            { userId: +req.body.friendId, friendId: req.requestedUser.id }
           ]
         }
       }
@@ -88,8 +88,8 @@ router.delete(
   '/delete/:friendId',
   asyncHandler(async (req, res, next) => {
     const friend = await User.findById(req.params.friendId)
-    await req.user.removeFriend(friend)
-    await friend.removeFriend(req.user)
+    await req.requestedUser.removeFriend(friend)
+    await friend.removeFriend(req.requestedUser)
     res.status(204).end()
   })
 )
@@ -106,7 +106,7 @@ router.get(
     })
     //we are looking for users who are not already friends
     const potentialFriends = await Promise.filter(users, user =>
-      req.user.hasFriend(user).then(bool => !bool)
+      req.requestedUser.hasFriend(user).then(bool => !bool)
     )
     res.json(potentialFriends)
   })
