@@ -35,7 +35,12 @@ module.exports = db => {
                     [Op.in]: ids
                   }
                 },
-                required: false
+                required: false,
+                include: [
+                  {
+                    model: db.model('user')
+                  }
+                ]
               },
               {
                 model: db.model('challenge'),
