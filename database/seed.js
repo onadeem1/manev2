@@ -155,7 +155,7 @@ const friendshipsData = ({ users }) => ({
 
 const placesData = () => ({
   raimos: {
-    googleId: 'ChIJk6AC-aKBwokRObblm9-hwQ43037',
+    googleId: 'ChIJk6AC-aKBwokRObblm9-hwQ4',
     name: 'Raimos'
   },
   shakeShack: {
@@ -163,7 +163,7 @@ const placesData = () => ({
     name: 'Shack Shack'
   },
   theShed: {
-    googleId: 'ChIJP_rMqXko6IkRBdEw9BhYXyQ54',
+    googleId: 'ChIJP_rMqXko6IkRBdEw9BhYXyQ',
     name: 'The Shed'
   },
   '205club': {
