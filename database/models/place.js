@@ -24,18 +24,18 @@ module.exports = db => {
     },
     {
       scopes: {
-        friends: function(ids) {
+        friends: function(ids, completeBool) {
           return {
             include: [
               {
                 model: db.model('recommendation'),
                 where: {
-                  complete: true,
+                  complete: completeBool,
                   userId: {
                     [Op.in]: ids
                   }
                 },
-                required: false,
+                required: true,
                 include: [
                   {
                     model: db.model('user')
@@ -45,17 +45,31 @@ module.exports = db => {
               {
                 model: db.model('challenge'),
                 where: {
-                  userId: {
+                  challengeCreatorId: {
                     [Op.in]: ids
                   }
                 },
-                required: false
+                required: false,
+                include: [
+                  {
+                    model: db.model('user'),
+                    as: 'challengeCreator'
+                  }
+                ]
               }
             ]
           }
         },
         allRecsAndChallenges: function() {
-          return { include: [db.model('recommendation'), db.model('challenge')] }
+          return {
+            include: [
+              { model: db.model('recommendation'), include: { model: db.model('user') } },
+              {
+                model: db.model('challenge'),
+                include: { model: db.model('user'), as: 'challengeCreator' }
+              }
+            ]
+          }
         }
       }
     }
@@ -66,21 +80,23 @@ module.exports = db => {
     return db.Promise.map(places, place => place.combinePlaceInfo(place))
   }
 
-  Place.getPlaceWithFriendRecs = async function(user, queryObj) {
+  Place.getPlaceWithFriendRecs = async function(user, queryObj, completeBool) {
     const ids = await user.getFriendAndUserIds()
-    const place = await Place.scope({ method: ['friends', ids] }).findOne({ where: queryObj })
-    return place.combinePlaceInfo(place)
+    const place = await Place.scope({ method: ['friends', ids, completeBool] }).findOne({
+      where: queryObj
+    })
+    return place.combinePlaceInfo()
   }
 
-  Place.getPlacesWithFriendRecs = async function(user) {
+  Place.getPlacesWithFriendRecs = async function(user, completeBool) {
     const ids = await user.getFriendAndUserIds()
-    const places = Place.scope({ method: ['friends', ids] }).findAll()
-    return db.Promise.map(places, place => place.combinePlaceInfo(place))
+    const places = Place.scope({ method: ['friends', ids, completeBool] }).findAll()
+    return db.Promise.map(places, place => place.combinePlaceInfo())
   }
 
-  Place.prototype.getGooglePlaceInfo = async function(placeid) {
+  Place.prototype.getGooglePlaceInfo = async function() {
     const query = {
-      placeid,
+      placeid: this.googleId,
       fields: [
         'name',
         'place_id',
@@ -96,9 +112,9 @@ module.exports = db => {
     return place.json.result
   }
 
-  Place.prototype.combinePlaceInfo = async function(place) {
-    const googPlace = await place.getGooglePlaceInfo(place.googleId)
-    return Object.assign({}, await place.get({ plain: true }), googPlace)
+  Place.prototype.combinePlaceInfo = async function() {
+    const googPlace = await this.getGooglePlaceInfo()
+    return Object.assign({}, await this.get({ plain: true }), googPlace)
   }
 
   return Place
