@@ -81,6 +81,13 @@ module.exports = db => {
     }
   )
 
+  //TODO: can this be functional somewhere else useful for anything passed in? guess it applies to any challenge or rec retrived
+  Challenge.prototype.getChallengeWithGoogPlace = async function() {
+    const plainChallenge = await this.get({ plain: true })
+    const place = await this.place.combinePlaceInfo()
+    return Object.assign({}, plainChallenge, { place })
+  }
+
   Challenge.getAllChallenges = async function(completeBool = undefined) {
     const allChallenges = await Challenge.scope('challengeCreator', 'place', {
       method: ['recommendations', completeBool]
