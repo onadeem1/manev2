@@ -1,7 +1,7 @@
 const { STRING, TEXT, INTEGER, BOOLEAN } = require('sequelize')
 
-module.exports = db =>
-  db.define('recommendation', {
+module.exports = db => {
+  const Recommendation = db.define('recommendation', {
     review: {
       type: TEXT
     },
@@ -24,6 +24,15 @@ module.exports = db =>
       defaultValue: false
     }
   })
+
+  Recommendation.prototype.getRecommendationWithGoogPlace = async function() {
+    const plainRecommendation = await this.get({ plain: true })
+    const place = await this.place.combinePlaceInfo()
+    return Object.assign({}, plainRecommendation, { place })
+  }
+
+  return Recommendation
+}
 
 module.exports.associations = (Recommendation, { User, Place, Challenge }) => {
   Recommendation.belongsTo(User)
