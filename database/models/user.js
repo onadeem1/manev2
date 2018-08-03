@@ -2,60 +2,124 @@ const crypto = require('crypto')
 const { STRING, ARRAY, INTEGER, BOOLEAN } = require('sequelize')
 
 module.exports = db => {
-  const User = db.define('user', {
-    firstName: {
-      type: STRING
-    },
-    lastName: {
-      type: STRING
-    },
-    username: {
-      type: STRING,
-      // allowNull: false,
-      unique: true
-    },
-    // Making `.salt` & `.password` act like functions hides them when serializing to JSON.
-    // This is a hack to get around Sequelize's lack of a "private" option.
-    password: {
-      type: STRING,
-      get() {
-        return () => this.getDataValue('password')
+  const User = db.define(
+    'user',
+    {
+      firstName: {
+        type: STRING
+      },
+      lastName: {
+        type: STRING
+      },
+      username: {
+        type: STRING,
+        // allowNull: false,
+        unique: true
+      },
+      // Making `.salt` & `.password` act like functions hides them when serializing to JSON.
+      // This is a hack to get around Sequelize's lack of a "private" option.
+      password: {
+        type: STRING,
+        get() {
+          return () => this.getDataValue('password')
+        }
+      },
+      email: {
+        type: STRING,
+        unique: true,
+        allowNull: false,
+        validate: {
+          isEmail: true
+        }
+      },
+      salt: {
+        type: STRING,
+        get() {
+          return () => this.getDataValue('salt')
+        }
+      },
+      googleId: {
+        type: STRING
+      },
+      phone: {
+        type: STRING
+      },
+      picture: {
+        type: STRING
+      },
+      isAdmin: {
+        type: BOOLEAN,
+        defaultValue: false
+      },
+      recommendationsSaved: {
+        //change this to an association?
+        type: ARRAY(INTEGER)
       }
     },
-    email: {
-      type: STRING,
-      unique: true,
-      allowNull: false,
-      validate: {
-        isEmail: true
+    {
+      scopes: {
+        recommendations: function(completeBool) {
+          return {
+            include: [db.model('recommendation')],
+            where: {
+              complete: completeBool
+            }
+          }
+        },
+        challenges: function() {
+          return {
+            include: [db.model('challenge')]
+          }
+        }
       }
-    },
-    salt: {
-      type: STRING,
-      get() {
-        return () => this.getDataValue('salt')
-      }
-    },
-    googleId: {
-      type: STRING
-    },
-    phone: {
-      type: STRING
-    },
-    picture: {
-      type: STRING
-    },
-    isAdmin: {
-      type: BOOLEAN,
-      defaultValue: false
-    },
-    recommendationsSaved: {
-      //change this to an association?
-      type: ARRAY(INTEGER)
     }
-  })
+  )
 
   //instance methods
+
+  User.prototype.getCreatedChallenges = async function() {
+    const createdChallenges = await this.getChallengesCreated({ include: db.model('place') })
+    const challengesWithFullPlace = await Promise.all(
+      createdChallenges.map(challenge => challenge.getChallengeWithGoogPlace())
+    )
+    return challengesWithFullPlace
+  }
+
+  //accepted challenges are incomplete recs :)
+  User.prototype.getAcceptedChallenges = async function() {
+    const acceptedChallenges = await this.getRecommendations({
+      include: [
+        db.model('place'),
+        {
+          model: db.model('challenge'),
+          include: [{ model: db.model('user'), as: 'challengeCreator' }]
+        }
+      ],
+      where: { complete: false }
+    })
+    const acceptedChallengesWithFullPlace = await Promise.all(
+      acceptedChallenges.map(recommendation => recommendation.getRecommendationWithGoogPlace())
+    )
+    return acceptedChallengesWithFullPlace
+  }
+
+  User.prototype.getCompleteChallenges = async function() {
+    const completeChallenges = await this.getRecommendations({
+      include: [
+        db.model('place'),
+        {
+          model: db.model('challenge'),
+          include: [{ model: db.model('user'), as: 'challengeCreator' }]
+        }
+      ],
+      where: { complete: false }
+    })
+    const completeChallengesWithFullPlace = await Promise.all(
+      completeChallenges.map(recommendation => recommendation.getRecommendationWithGoogPlace())
+    )
+    return completeChallengesWithFullPlace
+  }
+
   User.prototype.correctPassword = function(candidatePwd) {
     return User.encryptPassword(candidatePwd, this.salt()) === this.password()
   }
@@ -102,7 +166,6 @@ module.exports = db => {
 
 module.exports.associations = (User, { Recommendation, Challenge, Friendship }) => {
   User.belongsToMany(User, { through: Friendship, as: 'friends' })
-  User.hasMany(Recommendation, { as: 'completedChallenges' })
-  User.hasMany(Recommendation, { as: 'incompleteChallenges' })
-  User.hasMany(Challenge, { as: 'challengesCreated' })
+  User.hasMany(Recommendation)
+  User.hasMany(Challenge, { as: 'challengesCreated', foreignKey: 'challengeCreatorId' })
 }
