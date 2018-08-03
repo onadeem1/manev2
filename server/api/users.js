@@ -3,8 +3,6 @@ const { User } = require('../../database')
 const asyncHandler = require('../../server/utils')
 module.exports = router
 
-//TODO: add admin privelege options to necessary routes
-
 //get all users
 router.get(
   '/',
@@ -39,7 +37,7 @@ router.param(
   })
 )
 
-//get user
+//get user include challenges & recs?
 router.get('/:id', (req, res, next) => {
   res.json(req.requestedUser)
 })
@@ -61,6 +59,24 @@ router.delete(
     res.status(204).end()
   })
 )
+
+//get the challenges the user has created
+router.get('/:id/challenges/created', async (req, res, next) => {
+  const createdChallenges = await req.requestedUser.getCreatedChallenges()
+  res.json(createdChallenges)
+})
+
+//get the challenges the user has accepted aka incomplete recs
+router.get('/:id/challenges/accepted', async (req, res, next) => {
+  const acceptedChallenges = await req.requestedUser.getAcceptedChallenges()
+  res.json(acceptedChallenges)
+})
+
+//get the challenges the user has completed aka complete recs
+router.get('/:id/challenges/complete', async (req, res, next) => {
+  const completeChallenges = await req.requestedUser.getCompleteChallenges()
+  res.json(completeChallenges)
+})
 
 //route user's friend specific actions to friends router
 router.use('/:id/friends', require('./friends'))
