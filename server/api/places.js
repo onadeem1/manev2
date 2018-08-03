@@ -1,9 +1,7 @@
 const router = require('express').Router()
-const { Place, User } = require('../../database')
+const { Place } = require('../../database')
 const asyncHandler = require('../../server/utils')
 module.exports = router
-
-//TODO: add admin privelege options to necessary routes
 
 //get all places admin route? includes all info for each place
 router.get(
@@ -14,23 +12,30 @@ router.get(
   })
 )
 
-//get all places w/ friend recommendations
+//get all places w/ friend recommendations - suggested list of places to try?
 router.get(
-  '/friends',
+  '/complete',
   asyncHandler(async (req, res, next) => {
-    const user = await User.findById(1) //TODO: replace with req.user
-    const allPlaces = await Place.getPlacesWithFriendRecs(user)
+    const allPlaces = await Place.getPlacesWithFriendRecs(req.user, true)
     res.json(allPlaces)
   })
 )
 
-//get a place by googleid w/ friend recs
+//get all places w/ accepted challenges - suggested list of places to try w/ a friend
 router.get(
-  '/google/:googleId',
+  '/accepted',
   asyncHandler(async (req, res, next) => {
-    const user = await User.findById(1) //TODO: replace with req.user
-    const place = await Place.getPlaceWithFriendRecs(user, { googleId: req.params.googleId })
-    res.json(place)
+    const allPlaces = await Place.getPlacesWithFriendRecs(req.user, false)
+    res.json(allPlaces)
+  })
+)
+
+//get all places w/ complete & accepted challenges - suggested list of places to try w/ a friend
+router.get(
+  '/all',
+  asyncHandler(async (req, res, next) => {
+    const allPlaces = await Place.getPlacesWithFriendRecs(req.user, undefined)
+    res.json(allPlaces)
   })
 )
 
@@ -40,6 +45,15 @@ router.post(
   asyncHandler(async (req, res, next) => {
     const newPlace = await Place.create(req.body)
     res.status(201).json(newPlace)
+  })
+)
+
+//get a place by googleid w/ friend recs
+router.get(
+  '/google/:googleId',
+  asyncHandler(async (req, res, next) => {
+    const place = await Place.getPlaceWithFriendRecs(req.user, { googleId: req.params.googleId })
+    res.json(place)
   })
 )
 
@@ -64,11 +78,28 @@ router.get('/:id', (req, res, next) => {
   res.json(req.place)
 })
 
-//get place w/ friend recs
+//get place w/ complete friend recs
 router.get(
-  '/:id/friends',
+  '/:id/complete',
   asyncHandler(async (req, res, next) => {
-    const place = await Place.getPlaceWithFriendRecs(req.user, { id: req.place.id })
+    const place = await Place.getPlaceWithFriendRecs(req.user, { id: req.place.id }, true)
+    res.json(place)
+  })
+)
+
+//get place w/ accepted challenges
+router.get(
+  '/:id/accepted',
+  asyncHandler(async (req, res, next) => {
+    const place = await Place.getPlaceWithFriendRecs(req.user, { id: req.place.id }, false)
+    res.json(place)
+  })
+)
+//get place w/ all info accepted & completed
+router.get(
+  '/:id/all',
+  asyncHandler(async (req, res, next) => {
+    const place = await Place.getPlaceWithFriendRecs(req.user, { id: req.place.id }, undefined)
     res.json(place)
   })
 )
