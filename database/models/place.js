@@ -76,45 +76,65 @@ module.exports = db => {
   )
 
   Place.getAllPlaces = async function() {
-    const places = await Place.scope('allRecsAndChallenges').findAll()
-    return db.Promise.map(places, place => place.combinePlaceInfo(place))
+    try {
+      const places = await Place.scope('allRecsAndChallenges').findAll()
+      return db.Promise.map(places, place => place.combinePlaceInfo(place))
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   Place.getPlaceWithFriendRecs = async function(user, queryObj, completeBool) {
-    const ids = await user.getFriendAndUserIds()
-    const place = await Place.scope({ method: ['friends', ids, completeBool] }).findOne({
-      where: queryObj
-    })
-    return place.combinePlaceInfo()
+    try {
+      const ids = await user.getFriendAndUserIds()
+      const place = await Place.scope({ method: ['friends', ids, completeBool] }).findOne({
+        where: queryObj
+      })
+      return place.combinePlaceInfo()
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   Place.getPlacesWithFriendRecs = async function(user, completeBool) {
-    const ids = await user.getFriendAndUserIds()
-    const places = Place.scope({ method: ['friends', ids, completeBool] }).findAll()
-    return db.Promise.map(places, place => place.combinePlaceInfo())
+    try {
+      const ids = await user.getFriendAndUserIds()
+      const places = Place.scope({ method: ['friends', ids, completeBool] }).findAll()
+      return db.Promise.map(places, place => place.combinePlaceInfo())
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   Place.prototype.getGooglePlaceInfo = async function() {
-    const query = {
-      placeid: this.googleId,
-      fields: [
-        'name',
-        'place_id',
-        'geometry',
-        'formatted_address',
-        'formatted_phone_number',
-        'opening_hours',
-        'type',
-        'website'
-      ]
+    try {
+      const query = {
+        placeid: this.googleId,
+        fields: [
+          'name',
+          'place_id',
+          'geometry',
+          'formatted_address',
+          'formatted_phone_number',
+          'opening_hours',
+          'type',
+          'website'
+        ]
+      }
+      const place = await gMaps.place(query).asPromise()
+      return place.json.result
+    } catch (error) {
+      console.error(error)
     }
-    const place = await gMaps.place(query).asPromise()
-    return place.json.result
   }
 
   Place.prototype.combinePlaceInfo = async function() {
-    const googPlace = await this.getGooglePlaceInfo()
-    return Object.assign({}, await this.get({ plain: true }), googPlace)
+    try {
+      const googPlace = await this.getGooglePlaceInfo()
+      return Object.assign({}, await this.get({ plain: true }), googPlace)
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   return Place

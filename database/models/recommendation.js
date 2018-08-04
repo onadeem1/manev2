@@ -26,9 +26,13 @@ module.exports = db => {
   })
 
   Recommendation.prototype.getRecommendationWithGoogPlace = async function() {
-    const plainRecommendation = await this.get({ plain: true })
-    const place = await this.place.combinePlaceInfo()
-    return Object.assign({}, plainRecommendation, { place })
+    try {
+      const plainRecommendation = await this.get({ plain: true })
+      const place = await this.place.combinePlaceInfo()
+      return Object.assign({}, plainRecommendation, { place })
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   return Recommendation

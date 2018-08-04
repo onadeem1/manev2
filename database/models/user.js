@@ -75,69 +75,90 @@ module.exports = db => {
     }
   )
 
-  //instance methods
+  /* instance methods */
 
   User.prototype.getCreatedChallenges = async function() {
-    const createdChallenges = await this.getChallengesCreated({ include: db.model('place') })
-    const challengesWithFullPlace = await Promise.all(
-      createdChallenges.map(challenge => challenge.getChallengeWithGoogPlace())
-    )
-    return challengesWithFullPlace
+    try {
+      const createdChallenges = await this.getChallengesCreated({ include: db.model('place') })
+      const challengesWithFullPlace = await Promise.all(
+        createdChallenges.map(challenge => challenge.getChallengeWithGoogPlace())
+      )
+      return challengesWithFullPlace
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   //accepted challenges are incomplete recs :)
   User.prototype.getAcceptedChallenges = async function() {
-    const acceptedChallenges = await this.getRecommendations({
-      include: [
-        db.model('place'),
-        {
-          model: db.model('challenge'),
-          include: [{ model: db.model('user'), as: 'challengeCreator' }]
-        }
-      ],
-      where: { complete: false }
-    })
-    const acceptedChallengesWithFullPlace = await Promise.all(
-      acceptedChallenges.map(recommendation => recommendation.getRecommendationWithGoogPlace())
-    )
-    return acceptedChallengesWithFullPlace
+    try {
+      const acceptedChallenges = await this.getRecommendations({
+        include: [
+          db.model('place'),
+          {
+            model: db.model('challenge'),
+            include: [{ model: db.model('user'), as: 'challengeCreator' }]
+          }
+        ],
+        where: { complete: false }
+      })
+      const acceptedChallengesWithFullPlace = await Promise.all(
+        acceptedChallenges.map(recommendation => recommendation.getRecommendationWithGoogPlace())
+      )
+      return acceptedChallengesWithFullPlace
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   User.prototype.getCompleteChallenges = async function() {
-    const completeChallenges = await this.getRecommendations({
-      include: [
-        db.model('place'),
-        {
-          model: db.model('challenge'),
-          include: [{ model: db.model('user'), as: 'challengeCreator' }]
-        }
-      ],
-      where: { complete: false }
-    })
-    const completeChallengesWithFullPlace = await Promise.all(
-      completeChallenges.map(recommendation => recommendation.getRecommendationWithGoogPlace())
-    )
-    return completeChallengesWithFullPlace
+    try {
+      const completeChallenges = await this.getRecommendations({
+        include: [
+          db.model('place'),
+          {
+            model: db.model('challenge'),
+            include: [{ model: db.model('user'), as: 'challengeCreator' }]
+          }
+        ],
+        where: { complete: false }
+      })
+      const completeChallengesWithFullPlace = await Promise.all(
+        completeChallenges.map(recommendation => recommendation.getRecommendationWithGoogPlace())
+      )
+      return completeChallengesWithFullPlace
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  User.prototype.getFriendIds = async function() {
+    try {
+      const friends = await this.getFriends({
+        attributes: ['id'],
+        through: { where: { accepted: true } }
+      })
+      const friendIds = friends.map(friend => friend.id)
+      return friendIds
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  User.prototype.getFriendAndUserIds = async function() {
+    try {
+      return [this.id, ...(await this.getFriendIds())]
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   User.prototype.correctPassword = function(candidatePwd) {
     return User.encryptPassword(candidatePwd, this.salt()) === this.password()
   }
 
-  User.prototype.getFriendIds = async function() {
-    const friends = await this.getFriends({
-      attributes: ['id'],
-      through: { where: { accepted: true } }
-    })
-    const friendIds = friends.map(friend => friend.id)
-    return friendIds
-  }
+  /* class methods */
 
-  User.prototype.getFriendAndUserIds = async function() {
-    return [this.id, ...(await this.getFriendIds())]
-  }
-
-  //class methods
   User.generateSalt = function() {
     return crypto.randomBytes(16).toString('base64')
   }
@@ -150,7 +171,8 @@ module.exports = db => {
       .digest('hex')
   }
 
-  // hooks
+  /* hooks */
+
   const setSaltAndPassword = user => {
     if (user.changed('password')) {
       user.salt = User.generateSalt()
