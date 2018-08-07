@@ -309,6 +309,7 @@ const recommendationsData = ({ users, places, challenges }) => ({
   },
   'zain accepts omer club challenge': {
     userId: users.zain.id,
+    placeId: places['205club'].id,
     challengeId: challenges['dance at the club'].id
   },
   'zoby completes omer club challenge': {
