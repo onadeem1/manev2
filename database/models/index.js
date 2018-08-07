@@ -6,7 +6,8 @@ const metaModels = {
   Place: require('./place'),
   Recommendation: require('./recommendation'),
   Challenge: require('./challenge'),
-  Friendship: require('./friendship')
+  Friendship: require('./friendship'),
+  Feed: require('./feed')
   // ----- Add new models here -----
 }
 
