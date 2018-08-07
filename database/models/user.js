@@ -186,8 +186,9 @@ module.exports = db => {
   return User
 }
 
-module.exports.associations = (User, { Recommendation, Challenge, Friendship }) => {
+module.exports.associations = (User, { Recommendation, Challenge, Friendship, Feed }) => {
   User.belongsToMany(User, { through: Friendship, as: 'friends' })
   User.hasMany(Recommendation)
   User.hasMany(Challenge, { as: 'challengesCreated', foreignKey: 'challengeCreatorId' })
+  User.belongsToMany(Recommendation, { through: Feed, as: 'feedItems' })
 }
