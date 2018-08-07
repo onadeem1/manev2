@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const { User } = require('../../database')
+const { User, Feed } = require('../../database')
 const asyncHandler = require('../../server/utils')
 module.exports = router
 
@@ -61,22 +61,40 @@ router.delete(
 )
 
 //get the challenges the user has created
-router.get('/:id/challenges/created', async (req, res, next) => {
-  const createdChallenges = await req.requestedUser.getCreatedChallenges()
-  res.json(createdChallenges)
-})
+router.get(
+  '/:id/challenges/created',
+  asyncHandler(async (req, res, next) => {
+    const createdChallenges = await req.requestedUser.getCreatedChallenges()
+    res.json(createdChallenges)
+  })
+)
 
 //get the challenges the user has accepted aka incomplete recs
-router.get('/:id/challenges/accepted', async (req, res, next) => {
-  const acceptedChallenges = await req.requestedUser.getAcceptedChallenges()
-  res.json(acceptedChallenges)
-})
+router.get(
+  '/:id/challenges/accepted',
+  asyncHandler(async (req, res, next) => {
+    const acceptedChallenges = await req.requestedUser.getAcceptedChallenges()
+    res.json(acceptedChallenges)
+  })
+)
 
 //get the challenges the user has completed aka complete recs
-router.get('/:id/challenges/complete', async (req, res, next) => {
-  const completeChallenges = await req.requestedUser.getCompleteChallenges()
-  res.json(completeChallenges)
-})
+router.get(
+  '/:id/challenges/complete',
+  asyncHandler(async (req, res, next) => {
+    const completeChallenges = await req.requestedUser.getCompleteChallenges()
+    res.json(completeChallenges)
+  })
+)
+
+//load the user's feed
+router.get(
+  '/:id/feed',
+  asyncHandler(async (req, res, next) => {
+    const feed = await Feed.loadFeed(req.requestedUser)
+    res.json(feed)
+  })
+)
 
 //route user's friend specific actions to friends router
 router.use('/:id/friends', require('./friends'))
