@@ -1,5 +1,5 @@
 const crypto = require('crypto')
-const { STRING, ARRAY, INTEGER, BOOLEAN } = require('sequelize')
+const { STRING, BOOLEAN } = require('sequelize')
 
 module.exports = db => {
   const User = db.define(
@@ -13,11 +13,11 @@ module.exports = db => {
       },
       username: {
         type: STRING,
-        // allowNull: false,
+        // allowNull: false, TODO: will need to work logic for G users to create username
         unique: true
       },
-      // Making `.salt` & `.password` act like functions hides them when serializing to JSON.
-      // This is a hack to get around Sequelize's lack of a "private" option.
+      /* Making `.salt` & `.password` act like functions hides them when serializing to JSON.
+         This is a hack to get around Sequelize's lack of a "private" option. */
       password: {
         type: STRING,
         get() {
@@ -50,10 +50,6 @@ module.exports = db => {
       isAdmin: {
         type: BOOLEAN,
         defaultValue: false
-      },
-      recommendationsSaved: {
-        //change this to an association?
-        type: ARRAY(INTEGER)
       }
     },
     {
@@ -186,9 +182,10 @@ module.exports = db => {
   return User
 }
 
-module.exports.associations = (User, { Recommendation, Challenge, Friendship, Feed }) => {
+module.exports.associations = (User, { Recommendation, Challenge, Friendship, Feed, Place }) => {
   User.belongsToMany(User, { through: Friendship, as: 'friends' })
   User.hasMany(Recommendation)
   User.hasMany(Challenge, { as: 'challengesCreated', foreignKey: 'challengeCreatorId' })
   User.belongsToMany(Recommendation, { through: Feed, as: 'feedItems' })
+  User.belongsToMany(Place, { through: 'favPlaces', as: {singular: 'favoritePlace', plural: 'favoritePlaces'}})
 }

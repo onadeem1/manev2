@@ -140,7 +140,8 @@ module.exports = db => {
   return Place
 }
 
-module.exports.associations = (Place, { Recommendation, Challenge }) => {
+module.exports.associations = (Place, { Recommendation, Challenge, User }) => {
   Place.hasMany(Recommendation)
   Place.hasMany(Challenge)
+  Place.belongsToMany(User, { through: 'favPlaces' })
 }

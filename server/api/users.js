@@ -87,6 +87,18 @@ router.get(
   })
 )
 
+//get user's saved favorite places
+router.get('/:id/favoritePlaces', async (req, res, next) => {
+  const favoritePlaces = await req.requestedUser.getFavoritePlaces()
+  res.json(favoritePlaces)
+})
+
+//add a favorite place
+router.post('/:id/favoritePlaces', async(req, res, next) => {
+  const addFavoritePlace = await req.requestedUser.addFavoritePlace(req.body.place)
+  res.status(201).json(addFavoritePlace)
+})
+
 //load the user's feed
 router.get(
   '/:id/feed',
