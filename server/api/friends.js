@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const { User, Friendship, Promise, Op } = require('../../database')
+const { User, Promise, Op } = require('../../database')
 const asyncHandler = require('../../server/utils')
 module.exports = router
 
@@ -7,13 +7,7 @@ module.exports = router
 router.get(
   '/',
   asyncHandler(async (req, res, next) => {
-    const friends = await req.requestedUser.getFriends({
-      through: {
-        where: {
-          accepted: true
-        }
-      }
-    })
+    const friends = await req.requestedUser.getAllFriends()
     res.json(friends)
   })
 )
@@ -22,14 +16,7 @@ router.get(
 router.get(
   '/requests',
   asyncHandler(async (req, res, next) => {
-    const friendRequests = await req.requestedUser.getFriends({
-      through: {
-        where: {
-          accepted: false,
-          originalRequest: false
-        }
-      }
-    })
+    const friendRequests = await req.requestedUser.getFriendRequests()
     res.json(friendRequests)
   })
 )
@@ -38,15 +25,8 @@ router.get(
 router.get(
   '/requested',
   asyncHandler(async (req, res, next) => {
-    const friendRequests = await req.requestedUser.getFriends({
-      through: {
-        where: {
-          accepted: false,
-          originalRequest: true
-        }
-      }
-    })
-    res.json(friendRequests)
+    const friendsRequested = await req.requestedUser.getFriendsRequested()
+    res.json(friendsRequested)
   })
 )
 
@@ -54,12 +34,8 @@ router.get(
 router.post(
   '/add',
   asyncHandler(async (req, res, next) => {
-    const friend = await User.findById(req.body.friendId)
-    const userFriendRequest = await req.requestedUser.addFriend(friend, {
-      through: { originalRequest: true }
-    })
-    const friendAddUser = await friend.addFriend(req.requestedUser)
-    res.status(201).json([userFriendRequest[0], friendAddUser[0]])
+    const friendRequest = await req.requestedUser.requestFriend(req.body.friendId)
+    res.status(201).json(friendRequest)
   })
 )
 
@@ -67,29 +43,16 @@ router.post(
 router.put(
   '/confirm',
   asyncHandler(async (req, res, next) => {
-    const confirmFriendship = await Friendship.update(
-      { accepted: true },
-      {
-        returning: true,
-        where: {
-          [Op.or]: [
-            { userId: req.requestedUser.id, friendId: +req.body.friendId },
-            { userId: +req.body.friendId, friendId: req.requestedUser.id }
-          ]
-        }
-      }
-    )
+    const confirmFriendship = await req.requestedUser.confirmFriend(req.body.friendId)
     res.status(200).json(confirmFriendship)
   })
 )
 
-//delete a friend
+//delete a friend or a friend request, same logic
 router.delete(
   '/delete/:friendId',
   asyncHandler(async (req, res, next) => {
-    const friend = await User.findById(req.params.friendId)
-    await req.requestedUser.removeFriend(friend)
-    await friend.removeFriend(req.requestedUser)
+    await req.requestedUser.deleteFriend(req.params.friendId)
     res.status(204).end()
   })
 )
@@ -98,16 +61,8 @@ router.delete(
 router.get(
   '/contacts',
   asyncHandler(async (req, res, next) => {
-    const phoneNumbers = req.query.phoneNumbers
-    const users = await User.findAll({
-      where: {
-        phone: { [Op.in]: phoneNumbers }
-      }
-    })
-    //we are looking for users who are not already friends
-    const potentialFriends = await Promise.filter(users, user =>
-      req.requestedUser.hasFriend(user).then(bool => !bool)
-    )
+    const potentialFriends = await req.requestedUser.potentialFriendsInContacts(req.query.phoneNumbers)
     res.json(potentialFriends)
   })
 )
+
