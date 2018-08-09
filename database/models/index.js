@@ -23,6 +23,14 @@ const createModels = db => {
     }
   })
 
+  //allows us to use default scopes as function to use includes w/ models that haven't been defined yet
+  Object.values(models).forEach(model => {
+    const { options } = model
+    if (typeof options.defaultScope === 'function') {
+      model.addScope('defaultScope', model.options.defaultScope(), { override: true })
+    }
+  })
+
   return models
 }
 
