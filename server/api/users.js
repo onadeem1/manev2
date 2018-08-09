@@ -31,16 +31,28 @@ router.param(
       err.status = 404
       throw err
     } else {
-      req.requestedUser = currentUser
+      req.requestedUser = currentUser //avoid clash w/ req.user from passport
       next()
     }
   })
 )
 
-//get user include challenges & recs?
-router.get('/:id', (req, res, next) => {
-  res.json(req.requestedUser)
-})
+//get basic user :)
+router.get(
+  '/:id',
+  asyncHandler((req, res, next) => {
+    res.json(req.requestedUser)
+  })
+)
+
+//get user - includes challenges & recs & places!
+router.get(
+  '/:id/full',
+  asyncHandler(async (req, res, next) => {
+    const user = await User.getFullUserInfo(req.params.id)
+    res.json(user)
+  })
+)
 
 //update user
 router.put(
@@ -53,10 +65,42 @@ router.put(
 
 //delete user
 router.delete(
+  //TODO: self or admin route
   '/:id',
   asyncHandler(async (req, res, next) => {
     await req.requestedUser.destroy()
     res.status(204).end()
+  })
+)
+
+//get all challenges associated with the user
+router.get(
+  '/:id/challenges',
+  asyncHandler(async (req, res, next) => {
+    const allChallenges = await req.requestedUser.getAllChallenges()
+    res.json(allChallenges)
+  })
+)
+
+//get the challenges the user has accepted aka incomplete recs
+router.get(
+  '/:id/challenges/accepted',
+  asyncHandler(async (req, res, next) => {
+    const acceptedChallenges = await req.requestedUser.getAllChallenges({
+      where: { complete: false }
+    })
+    res.json(acceptedChallenges)
+  })
+)
+
+//get the challenges the user has completed aka complete recs
+router.get(
+  '/:id/challenges/complete',
+  asyncHandler(async (req, res, next) => {
+    const completeChallenges = await req.requestedUser.getAllChallenges({
+      where: { complete: true }
+    })
+    res.json(completeChallenges)
   })
 )
 
@@ -69,35 +113,23 @@ router.get(
   })
 )
 
-//get the challenges the user has accepted aka incomplete recs
-router.get(
-  '/:id/challenges/accepted',
-  asyncHandler(async (req, res, next) => {
-    const acceptedChallenges = await req.requestedUser.getAcceptedChallenges()
-    res.json(acceptedChallenges)
-  })
-)
-
-//get the challenges the user has completed aka complete recs
-router.get(
-  '/:id/challenges/complete',
-  asyncHandler(async (req, res, next) => {
-    const completeChallenges = await req.requestedUser.getCompleteChallenges()
-    res.json(completeChallenges)
-  })
-)
-
 //get user's saved favorite places
-router.get('/:id/favoritePlaces', async (req, res, next) => {
-  const favoritePlaces = await req.requestedUser.getFavoritePlaces()
-  res.json(favoritePlaces)
-})
+router.get(
+  '/:id/favoritePlaces',
+  asyncHandler(async (req, res, next) => {
+    const favoritePlaces = await req.requestedUser.getFavoritePlaces()
+    res.json(favoritePlaces)
+  })
+)
 
 //add a favorite place
-router.post('/:id/favoritePlaces', async(req, res, next) => {
-  const addFavoritePlace = await req.requestedUser.addFavoritePlace(req.body.place)
-  res.status(201).json(addFavoritePlace)
-})
+router.post(
+  '/:id/favoritePlaces',
+  asyncHandler(async (req, res, next) => {
+    const addFavoritePlace = await req.requestedUser.addFavoritePlace(req.body.place)
+    res.status(201).json(addFavoritePlace)
+  })
+)
 
 //load the user's feed
 router.get(
