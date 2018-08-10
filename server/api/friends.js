@@ -6,7 +6,7 @@ module.exports = router
 router.get(
   '/',
   asyncHandler(async (req, res, next) => {
-    const friends = await req.requestedUser.getAllFriends()
+    const friends = await req.requestedUser.allFriends()
     res.json(friends)
   })
 )
@@ -15,7 +15,7 @@ router.get(
 router.get(
   '/requests',
   asyncHandler(async (req, res, next) => {
-    const friendRequests = await req.requestedUser.getFriendRequests()
+    const friendRequests = await req.requestedUser.friendRequests()
     res.json(friendRequests)
   })
 )
@@ -24,7 +24,7 @@ router.get(
 router.get(
   '/requested',
   asyncHandler(async (req, res, next) => {
-    const friendsRequested = await req.requestedUser.getFriendsRequested()
+    const friendsRequested = await req.requestedUser.friendsRequested()
     res.json(friendsRequested)
   })
 )
