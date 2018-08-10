@@ -27,10 +27,23 @@ module.exports = db => {
       }
     },
     {
+      defaultScope: () => ({
+        include: [db.model('place'), db.model('challenge')]
+      }),
       scopes: {
-        place: function() {
+        complete: {
+          where: {
+            complete: true
+          }
+        },
+        incomplete: {
+          where: {
+            complete: false
+          }
+        },
+        challenge: function() {
           return {
-            include: [db.model('place')]
+            include: [db.model('challenge')]
           }
         },
         user: function() {
@@ -38,25 +51,13 @@ module.exports = db => {
             include: [db.model('user')]
           }
         },
-        challenge: function() {
-          return {
-            include: [
-              {
-                model: db.model('challenge'),
-                include: {
-                  model: db.model('user'),
-                  as: 'challengeCreator'
-                }
-              }
-            ]
-          }
-        },
-        friends: function(ids) {
+        friends: function(ids, completeBool) {
           return {
             where: {
               userId: {
                 [Op.in]: ids
-              }
+              },
+              complete: completeBool
             }
           }
         }
