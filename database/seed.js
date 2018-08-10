@@ -1,5 +1,5 @@
 const db = require('./index')
-const { User, Place, Recommendation, Challenge, Friendship, Promise } = db
+const { User, Place, Post, Challenge, Friendship, Promise } = db
 
 //dummy data, functions that return objects for use in seed function, edit to add/remove seed data
 const usersData = () => ({
@@ -11,8 +11,7 @@ const usersData = () => ({
     phone: 5166439641,
     picture:
       'https://scontent-lga3-1.xx.fbcdn.net/v/t1.0-9/14702480_10105493007974789_2631904228540268496_n.jpg?_nc_cat=0&oh=599631b805576120fbdad8d594ff64d1&oe=5B9F2F52',
-    isAdmin: true,
-    recommendationsSaved: [1, 2, 3]
+    isAdmin: true
   },
   zain: {
     firstName: 'Zain',
@@ -22,8 +21,7 @@ const usersData = () => ({
     phone: 5162442916,
     picture:
       'https://scontent-lga3-1.xx.fbcdn.net/v/t1.0-9/311871_10150451916788453_1159216794_n.jpg?_nc_cat=0&oh=557633b552f64369fc715260fe3d030d&oe=5BD8AD0D',
-    isAdmin: true,
-    recommendationsSaved: [4, 5, 6]
+    isAdmin: true
   },
   zoby: {
     firstName: 'Zohayb',
@@ -33,8 +31,7 @@ const usersData = () => ({
     phone: 5166030254,
     picture:
       'https://scontent-lga3-1.xx.fbcdn.net/v/t1.0-9/10426308_1163424637002509_6120123193537198820_n.jpg?_nc_cat=0&oh=9fd2a5386e262fa44711eec94ff4a7ca&oe=5BD127C8',
-    isAdmin: true,
-    recommendationsSaved: [3, 5, 1]
+    isAdmin: true
   },
   danish: {
     firstName: 'Danish',
@@ -44,8 +41,7 @@ const usersData = () => ({
     phone: 5163766308,
     picture:
       'https://scontent-lga3-1.xx.fbcdn.net/v/t1.0-9/25770_377372734835_2988176_n.jpg?_nc_cat=0&oh=9d81cd510df9ca585bd4e2066affdabb&oe=5BD0C7F6',
-    isAdmin: false,
-    recommendationsSaved: [1, 2, 5]
+    isAdmin: false
   },
   maryam: {
     firstName: 'Maryam',
@@ -55,8 +51,7 @@ const usersData = () => ({
     phone: 5168847563,
     picture:
       'https://media.licdn.com/dms/image/C5603AQFU5dPN3Sj6cQ/profile-displayphoto-shrink_800_800/0?e=1536796800&v=beta&t=IATnUJlv_wKQRXlpKWhFBzW-zuETjRntuWRnFJBTl0I',
-    isAdmin: false,
-    recommendationsSaved: [6, 3]
+    isAdmin: false
   },
   erum: {
     firstName: 'Erum',
@@ -66,8 +61,7 @@ const usersData = () => ({
     phone: 5167284075,
     picture:
       'https://media.licdn.com/dms/image/C5603AQFU5dPN3Sj6cQ/profile-displayphoto-shrink_800_800/0?e=1536796800&v=beta&t=IATnUJlv_wKQRXlpKWhFBzW-zuETjRntuWRnFJBTl0I',
-    isAdmin: false,
-    recommendationsSaved: [6, 3]
+    isAdmin: false
   }
 })
 
@@ -220,7 +214,7 @@ const challengesData = ({ places, users }) => ({
   }
 })
 
-const recommendationsData = ({ users, places, challenges }) => ({
+const postsData = ({ users, places, challenges }) => ({
   'raimos is amazing': {
     review: 'great setting, authentic italian vibe, food was delicious, must try the grandma',
     picture: 'https://c1.staticflickr.com/9/8189/8354014819_3f8fc8668f_b.jpg',
@@ -349,7 +343,7 @@ const seedUsers = createSeed(User, usersData)
 const seedFriendships = createSeed(Friendship, friendshipsData)
 const seedPlaces = createSeed(Place, placesData)
 const seedChallenges = createSeed(Challenge, challengesData)
-const seedRecomendations = createSeed(Recommendation, recommendationsData)
+const seedPosts = createSeed(Post, postsData)
 
 /* createSeed Function Info
     seed(Model: Sequelize.Model, dataCreator: Function) ->
@@ -387,7 +381,7 @@ async function seed() {
   seeded.places = await seedPlaces()
   seeded.friendships = await seedFriendships(seeded)
   seeded.challenges = await seedChallenges(seeded)
-  seeded.recommendations = await seedRecomendations(seeded)
+  seeded.posts = await seedPosts(seeded)
 }
 
 async function runSeed() {

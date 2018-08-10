@@ -4,7 +4,7 @@ const { mapValues } = require('lodash')
 const metaModels = {
   User: require('./user'),
   Place: require('./place'),
-  Recommendation: require('./recommendation'),
+  Post: require('./post'),
   Challenge: require('./challenge'),
   Friendship: require('./friendship'),
   Feed: require('./feed')
