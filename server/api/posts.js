@@ -10,7 +10,6 @@ module.exports = router
 router.get(
   '/',
   asyncHandler(async (req, res, next) => {
-    console.log('HERE')
     const allRecommendations = await Recommendation.getAllRecommendations()
     res.json(allRecommendations)
   })
