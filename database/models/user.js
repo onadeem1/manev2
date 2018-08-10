@@ -54,16 +54,27 @@ module.exports = db => {
     },
     {
       scopes: {
-        challenge: () => ({
+        created: () => ({
           include: [
             {
               model: db.model('challenge').scope('place'),
-              as: 'challengesCreated'
+              as: 'createdChallenges'
             }
           ]
         }),
-        recommendation: () => ({
-          include: [{ model: db.model('recommendation') }]
+        post: () => ({
+          include: [{ model: db.model('post') }]
+        }),
+        accepted: () => ({
+          include: [{ model: db.model('post'), as: 'acceptedChallenges' }]
+        }),
+        completed: () => ({
+          include: [
+            {
+              model: db.model('post').scope('linkedPost', 'defaultScope'),
+              as: 'completedChallenges'
+            }
+          ]
         }),
         favPlaces: () => ({
           include: [{ model: db.model('place'), as: 'favoritePlaces' }]
@@ -78,49 +89,33 @@ module.exports = db => {
     return User.encryptPassword(candidatePwd, this.salt()) === this.password()
   }
 
-  User.prototype.getCreatedChallenges = async function() {
-    try {
-      const createdChallenges = await this.getChallengesCreated()
-      const fullCreatedChallenges = await Promise.all(
-        createdChallenges.map(challenge => challenge.getChallengeWithGoogPlace())
-      )
-      return fullCreatedChallenges
-    } catch (error) {
-      console.error(error)
-    }
+  User.prototype.createdChallenges = async function() {
+    const createdChallenges = await this.getCreatedChallenges({
+      scope: ['place']
+    })
+    return Promise.all(createdChallenges.map(challenge => challenge.getChallengeWithGoogPlace()))
   }
 
-  User.prototype.getAllChallenges = async function(options = {}) {
-    try {
-      const recommendations = await this.getRecommendations(options)
-      const fullRecommendations = await Promise.all(
-        recommendations.map(recommendation => recommendation.getRecommendationWithGoogPlace())
-      )
-      return fullRecommendations
-    } catch (error) {
-      console.error(error)
-    }
+  User.prototype.acceptedChallenges = async function() {
+    const acceptedChallenges = await this.getAcceptedChallenges()
+    return Promise.all(acceptedChallenges.map(post => post.getPostWithGoogPlace()))
+  }
+
+  User.prototype.completedChallenges = async function() {
+    const completedChallenges = await this.getCompletedChallenges()
+    return Promise.all(completedChallenges.map(post => post.getPostWithGoogPlace()))
   }
 
   User.prototype.getFriendIds = async function() {
-    try {
-      const friends = await this.getFriends({
-        attributes: ['id'],
-        through: { where: { accepted: true } }
-      })
-      const friendIds = friends.map(friend => friend.id)
-      return friendIds
-    } catch (error) {
-      console.error(error)
-    }
+    const friends = await this.getFriends({
+      attributes: ['id'],
+      through: { where: { accepted: true } }
+    })
+    return friends.map(friend => friend.id)
   }
 
   User.prototype.getFriendAndUserIds = async function() {
-    try {
-      return [this.id, ...(await this.getFriendIds())]
-    } catch (error) {
-      console.error(error)
-    }
+    return [this.id, ...(await this.getFriendIds())]
   }
 
   /* friendship helper method */
@@ -134,55 +129,43 @@ module.exports = db => {
   })
 
   //friendship related instance methods, logic doesn't work in scopes ?! :(
-  User.prototype.getAllFriends = function() {
+  User.prototype.allFriends = function() {
     return this.getFriends(friendsOptions(true))
   }
 
-  User.prototype.getFriendRequests = function() {
+  User.prototype.friendRequests = function() {
     return this.getFriends(friendsOptions(false, false))
   }
 
-  User.prototype.getFriendsRequested = function() {
+  User.prototype.friendsRequested = function() {
     return this.getFriends(friendsOptions(false, true))
   }
 
   User.prototype.requestFriend = async function(friendId) {
-    try {
-      const friend = await User.findById(friendId)
-      const userRequest = await this.addFriend(friend, { through: { originalRequest: true } })
-      const friendRequest = await friend.addFriend(this)
-      return [...userRequest, ...friendRequest]
-    } catch (error) {
-      console.error(error)
-    }
+    const friend = await User.findById(friendId)
+    const userRequest = await this.addFriend(friend, { through: { originalRequest: true } })
+    const friendRequest = await friend.addFriend(this)
+    return [...userRequest, ...friendRequest]
   }
 
   User.prototype.confirmFriend = async function(friendId) {
-    try {
-      const friend = await User.findById(friendId)
-      const userConfirm = await this.addFriend(friend, {
-        through: { accepted: true },
-        returning: true
-      })
-      const friendConfirm = await friend.addFriend(this, {
-        through: { accepted: true },
-        returning: true
-      })
-      return [...userConfirm[1], ...friendConfirm[1]] //return only the models from the update
-    } catch (error) {
-      console.error(error)
-    }
+    const friend = await User.findById(friendId)
+    const userConfirm = await this.addFriend(friend, {
+      through: { accepted: true },
+      returning: true
+    })
+    const friendConfirm = await friend.addFriend(this, {
+      through: { accepted: true },
+      returning: true
+    })
+    return [...userConfirm[1], ...friendConfirm[1]] //return only the models from the update
   }
 
   User.prototype.deleteFriend = async function(friendId) {
-    try {
-      const friend = await User.findById(friendId)
-      await this.removeFriend(friend)
-      await friend.removeFriend(this)
-      return 'succesfully deleted friend'
-    } catch (error) {
-      console.error(error)
-    }
+    const friend = await User.findById(friendId)
+    await this.removeFriend(friend)
+    await friend.removeFriend(this)
+    return 'succesfully deleted friend'
   }
 
   User.prototype.potentialFriendsInContacts = async function(phoneNumbers) {
@@ -192,28 +175,30 @@ module.exports = db => {
       }
     })
     //we are looking for users who are not already friends
-    const potentialFriends = await Promise.filter(users, user =>
-      this.hasFriend(user).then(bool => !bool)
-    )
-    return potentialFriends
+    return Promise.filter(users, user => this.hasFriend(user).then(bool => !bool))
   }
 
   /* class methods */
 
-  User.getFullUserInfo = async function(id) {
-    try {
-      const user = await User.scope('challenge', 'recommendation', 'favPlaces').findById(id)
-      const plainUser = user.get({ plain: true })
-      const challengesCreated = await Promise.all(
-        user.challengesCreated.map(challenge => challenge.getChallengeWithGoogPlace())
-      )
-      const recommendations = await Promise.all(
-        user.recommendations.map(recommendation => recommendation.getRecommendationWithGoogPlace())
-      )
-      return { ...plainUser, challengesCreated, recommendations }
-    } catch (error) {
-      console.error(error)
-    }
+  User.fullUserInfo = async function(id) {
+    const user = await User.scope('created', 'accepted', 'completed', 'favPlaces').findById(id)
+    const plainUser = user.get({ plain: true })
+    //add the goog place info to all posts/challenges
+    const createdChallengesUpdate = Promise.all(
+      user.createdChallenges.map(challenge => challenge.getChallengeWithGoogPlace())
+    )
+    const acceptedChallengesUpdate = Promise.all(
+      user.acceptedChallenges.map(post => post.getPostWithGoogPlace())
+    )
+    const completedChallengesUpdate = Promise.all(
+      user.completedChallenges.map(post => post.getPostWithGoogPlace())
+    )
+    const [createdChallenges, acceptedChallenges, completedChallenges] = await Promise.all([
+      createdChallengesUpdate,
+      acceptedChallengesUpdate,
+      completedChallengesUpdate
+    ])
+    return { ...plainUser, createdChallenges, acceptedChallenges, completedChallenges }
   }
 
   User.generateSalt = function() {
@@ -243,13 +228,12 @@ module.exports = db => {
   return User
 }
 
-module.exports.associations = (User, { Recommendation, Challenge, Friendship, Feed, Place }) => {
+module.exports.associations = (User, { Post, Challenge, Friendship, Feed, Place }) => {
   User.belongsToMany(User, { through: Friendship, as: 'friends' })
-  User.hasMany(Recommendation)
-  User.hasMany(Challenge, { as: 'challengesCreated', foreignKey: 'challengeCreatorId' })
-  User.belongsToMany(Recommendation, { through: Feed, as: 'feedItems' })
-  User.belongsToMany(Place, {
-    through: 'favPlaces',
-    as: { singular: 'favoritePlace', plural: 'favoritePlaces' }
-  })
+  User.hasMany(Post)
+  User.hasMany(Post, { as: 'acceptedChallenges', scope: { complete: false } })
+  User.hasMany(Post, { as: 'completedChallenges', scope: { complete: true } })
+  User.hasMany(Challenge, { as: 'createdChallenges', foreignKey: 'challengeCreatorId' })
+  User.belongsToMany(Post, { through: Feed, as: 'feedPosts' })
+  User.belongsToMany(Place, { through: 'favPlaces', as: 'favoritePlaces' })
 }
