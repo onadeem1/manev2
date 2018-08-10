@@ -1,5 +1,4 @@
 const router = require('express').Router()
-const { User, Promise, Op } = require('../../database')
 const asyncHandler = require('../../server/utils')
 module.exports = router
 
@@ -61,8 +60,9 @@ router.delete(
 router.get(
   '/contacts',
   asyncHandler(async (req, res, next) => {
-    const potentialFriends = await req.requestedUser.potentialFriendsInContacts(req.query.phoneNumbers)
+    const potentialFriends = await req.requestedUser.potentialFriendsInContacts(
+      req.query.phoneNumbers
+    )
     res.json(potentialFriends)
   })
 )
-
