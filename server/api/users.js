@@ -45,11 +45,11 @@ router.get(
   })
 )
 
-//get user - includes challenges & recs & places!
+//get user - includes challenges created, accepted, completed & fav places!
 router.get(
   '/:id/full',
   asyncHandler(async (req, res, next) => {
-    const user = await User.getFullUserInfo(req.params.id)
+    const user = await User.fullUserInfo(req.params.id)
     res.json(user)
   })
 )
@@ -73,33 +73,20 @@ router.delete(
   })
 )
 
-//get all challenges associated with the user
-router.get(
-  '/:id/challenges',
-  asyncHandler(async (req, res, next) => {
-    const allChallenges = await req.requestedUser.getAllChallenges()
-    res.json(allChallenges)
-  })
-)
-
 //get the challenges the user has accepted aka incomplete recs
 router.get(
   '/:id/challenges/accepted',
   asyncHandler(async (req, res, next) => {
-    const acceptedChallenges = await req.requestedUser.getAllChallenges({
-      where: { complete: false }
-    })
+    const acceptedChallenges = await req.requestedUser.acceptedChallenges()
     res.json(acceptedChallenges)
   })
 )
 
 //get the challenges the user has completed aka complete recs
 router.get(
-  '/:id/challenges/complete',
+  '/:id/challenges/completed',
   asyncHandler(async (req, res, next) => {
-    const completeChallenges = await req.requestedUser.getAllChallenges({
-      where: { complete: true }
-    })
+    const completeChallenges = await req.requestedUser.completedChallenges()
     res.json(completeChallenges)
   })
 )
@@ -108,7 +95,7 @@ router.get(
 router.get(
   '/:id/challenges/created',
   asyncHandler(async (req, res, next) => {
-    const createdChallenges = await req.requestedUser.getCreatedChallenges()
+    const createdChallenges = await req.requestedUser.createdChallenges()
     res.json(createdChallenges)
   })
 )
