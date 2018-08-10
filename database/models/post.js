@@ -1,8 +1,8 @@
 const { STRING, TEXT, INTEGER, BOOLEAN, Op } = require('sequelize')
 
 module.exports = db => {
-  const Recommendation = db.define(
-    'recommendation',
+  const Post = db.define(
+    'post',
     {
       review: {
         type: TEXT
@@ -65,76 +65,76 @@ module.exports = db => {
     }
   )
 
-  Recommendation.prototype.getRecommendationWithGoogPlace = async function() {
-    const plainRecommendation = await this.get({ plain: true })
+  Post.prototype.getPostWithGoogPlace = async function() {
+    const plainPost = await this.get({ plain: true })
     const place = await this.place.combinePlaceInfo()
-    return Object.assign({}, plainRecommendation, { place })
+    return Object.assign({}, plainPost, { place })
   }
 
-  Recommendation.getRecommendation = async function(id) {
+  Post.getPost = async function(id) {
     try {
-      const recommendation = await this.scope('place', 'user', 'challenge').findById(id)
-      return recommendation
+      const post = await this.scope('place', 'user', 'challenge').findById(id)
+      return post
     } catch (error) {
       console.error(error)
     }
   }
 
-  Recommendation.createRecommendation = async function({
+  Post.createPost = async function({
     place: placeInfo,
     challenge: challengeInfo,
-    recommendation: recommendationInfo
+    post: postInfo
   }) {
     try {
       const place = await db.model('place').findOrCreate({ where: placeInfo })
       challengeInfo = Object.assign(challengeInfo, { placeId: place[0].id })
       const challenge = await db.model('challenge').create(challengeInfo)
-      recommendationInfo = Object.assign(
-        recommendationInfo,
+      postInfo = Object.assign(
+        postInfo,
         { challengeId: challenge.id },
         { userId: challenge.challengeCreatorId },
         { placeId: place[0].id }
       )
-      const recommendation = this.create(recommendationInfo)
-      return recommendation
+      const post = this.create(postInfo)
+      return post
     } catch (error) {
       console.error(error)
     }
   }
 
-  Recommendation.getAllRecommendations = async function(options) {
+  Post.getAllPosts = async function(options) {
     try {
-      const recommendations = await this.scope('place', 'user', 'challenge').findAll(options)
-      const fullRecommendations = Promise.all(
-        recommendations.map(recommendation => recommendation.getRecommendationWithGoogPlace())
+      const posts = await this.scope('place', 'user', 'challenge').findAll(options)
+      const fullPosts = Promise.all(
+        posts.map(post => post.getPostWithGoogPlace())
       )
-      return fullRecommendations
+      return fullPosts
     } catch (error) {
       console.error(error)
     }
   }
 
-  Recommendation.getFriendsRecommendations = async function(user, options = {}) {
+  Post.getFriendsPosts = async function(user, options = {}) {
     try {
       const ids = await user.getFriendAndUserIds()
-      const recommendations = await this.scope('place', 'user', 'challenge', {
+      const posts = await this.scope('place', 'user', 'challenge', {
         method: ['friends', ids]
       }).findAll(options)
-      const fullRecommendations = await Promise.all(
-        recommendations.map(recommendation => recommendation.getRecommendationWithGoogPlace())
+      const fullPosts = await Promise.all(
+        posts.map(post => post.getPostWithGoogPlace())
       )
-      return fullRecommendations
+      return fullPosts
     } catch (error) {
       return Promise.reject(error)
     }
   }
 
-  return Recommendation
+  return Post
 }
 
-module.exports.associations = (Recommendation, { Feed, User, Place, Challenge }) => {
-  Recommendation.belongsTo(User)
-  Recommendation.belongsTo(Place)
-  Recommendation.belongsTo(Challenge)
-  Recommendation.belongsToMany(User, { through: Feed, as: 'feedOwner' })
+module.exports.associations = (Post, { Feed, User, Place, Challenge }) => {
+  Post.belongsTo(User)
+  Post.belongsTo(Place)
+  Post.belongsTo(Challenge)
+  Post.belongsToMany(User, { through: Feed, as: 'feedOwner' })
 }
