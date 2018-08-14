@@ -1,80 +1,72 @@
 const router = require('express').Router()
-const { Recommendation, Feed } = require('../../database')
+const { Post, Feed } = require('../../database')
 const asyncHandler = require('../../server/utils')
 module.exports = router
 
-//TODO: add admin privelege options to necessary routes
-//TODO: Set limits, offsets etc? will see in future
+//TODO: add admin privelege options to necessary routes & selforAdmin to user specific routes
+//TODO: Test out write feeds at scale, is it ok after sending response? Load on read vs. write approach
+//TODO: see best way to send in create new post w/ new challenge & sometimes new place object
 
-//get all Recs w/ full info
+//get all posts
 router.get(
   '/',
   asyncHandler(async (req, res, next) => {
-    const allRecommendations = await Recommendation.getAllRecommendations()
-    res.json(allRecommendations)
+    const allPosts = await Post.allPosts()
+    res.json(allPosts)
   })
 )
 
-//get all complete recs
+//get all incomplete posts aka accepted challenges
 router.get(
-  '/complete',
+  '/accepted',
   asyncHandler(async (req, res, next) => {
-    const recommendations = await Recommendation.getAllRecommendations({
-      where: { complete: true }
-    })
-    res.json(recommendations)
+    const accepted = await Post.allAccepted()
+    res.json(accepted)
+  })
+)
+//get all complete posts aka completed challenges
+router.get(
+  '/completed',
+  asyncHandler(async (req, res, next) => {
+    const completed = await Post.allCompleted()
+    res.json(completed)
   })
 )
 
-//get all incomplete recs, these are accepted challenges
+//Feed on read approach, get all recs from friends
 router.get(
-  '/incomplete',
+  '/friends',
   asyncHandler(async (req, res, next) => {
-    const recommendations = await Recommendation.getAllRecommendations({
-      where: { complete: false }
-    })
-    res.json(recommendations)
+    const friendsPosts = await Post.friends(req.user)
+    res.json(friendsPosts)
   })
 )
 
-//Feed on read approach
+//get all accepted posts from friends
 router.get(
-  '/all/friends',
+  '/friends/accepted',
   asyncHandler(async (req, res, next) => {
-    const recommendations = await Recommendation.getFriendsRecommendations(req.user)
-    res.json(recommendations)
+    const friendsAccepted = await Post.friendsAccepted(req.user)
+    res.json(friendsAccepted)
   })
 )
 
 //get all complete recs from friends
 router.get(
-  '/complete/friends',
+  '/friends/completed',
   asyncHandler(async (req, res, next) => {
-    const recommendations = await Recommendation.getFriendsRecommendations(req.user, {
-      where: { complete: true }
-    })
-    res.json(recommendations)
-  })
-)
-
-//get all incomplete recs from friends, these are accepted challenges
-router.get(
-  '/incomplete/friends',
-  asyncHandler(async (req, res, next) => {
-    const recommendations = await Recommendation.getFriendsRecommendations(req.user, {
-      where: { complete: false }
-    })
-    res.json(recommendations)
+    const friendsCompleted = await Post.friendsCompleted(req.user)
+    res.json(friendsCompleted)
   })
 )
 
 router.post(
-  //pass in req.body obj as { place: placeObj, challenge: challengeObj, recommendation: recommendationObj}
+  //pass in req.body obj as { place: placeObj, challenge: challengeObj, post: postObj}
   '/',
   asyncHandler(async (req, res, next) => {
-    const recommendation = await Recommendation.createRecommendation(req.body)
-    res.status(201).json(recommendation)
-    Feed.writeFeed(req.user, recommendation.id) //TODO: should we write after sending the response?
+    const createdPost = await Post.createPost(req.body)
+    res.status(201).json(createdPost)
+    Feed.writeFeed(req.user, createdPost.id)
   })
 )
 
@@ -82,58 +74,58 @@ router.post(
 router.post(
   '/accept',
   asyncHandler(async (req, res, next) => {
-    const acceptChallenge = await Recommendation.create(req.body)
+    const acceptChallenge = await Post.create(req.body)
     res.status(201).json(acceptChallenge)
-    Feed.writeFeed(req.user, acceptChallenge.id) //TODO: should we write after sending the response?
+    Feed.writeFeed(req.user, acceptChallenge.id)
   })
 )
 
-//param for all recommendation by id requests
+//param for all post by id requests
 router.param(
   'id',
   asyncHandler(async (req, res, next, id) => {
-    const currentRecommendation = await Recommendation.findById(id)
-    if (!currentRecommendation) {
+    const currentPost = await Post.findById(id)
+    if (!currentPost) {
       const err = Error('Challenge not found')
       err.status = 404
       throw err
     } else {
-      req.recommendation = currentRecommendation
+      req.post = currentPost
       next()
     }
   })
 )
 
-//return full recommendation info
+//return full post info
 router.get('/:id', async (req, res, next) => {
-  const recommendation = await Recommendation.getRecommendation(req.recommendation.id)
-  res.json(recommendation)
+  const post = await Post.getPost(req.post.id)
+  res.json(post)
 })
 
 //complete the challenge
 router.put(
   '/:id/complete',
   asyncHandler(async (req, res, next) => {
-    const completeRecommendation = await req.recommendation.update(req.body)
-    res.status(200).json(completeRecommendation)
-    Feed.writeFeed(req.user, completeRecommendation.id) //TODO: should we write after sending the response?
+    const completePost = await req.post.update(req.body)
+    res.status(200).json(completePost)
+    Feed.writeFeed(req.user, completePost.id)
   })
 )
 
-//any non-completing the challenge update, ex. updating rating etc.
+//any non-completing the challenge update, ex. updating rating etc. don't write to feed
 router.put(
   '/:id',
   asyncHandler(async (req, res, next) => {
-    const updatedRecommendation = await req.recommendation.update(req.body)
-    res.status(200).json(updatedRecommendation)
+    const updatedPost = await req.post.update(req.body)
+    res.status(200).json(updatedPost)
   })
 )
 
-//delete recommendation //TODO: add userOrSelf admin func
+//delete post
 router.delete(
   '/:id',
   asyncHandler(async (req, res, next) => {
-    await req.challenge.destroy()
+    await req.post.destroy()
     res.status(204).end()
   })
 )
