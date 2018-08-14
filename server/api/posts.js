@@ -43,7 +43,7 @@ router.get(
   })
 )
 
-//Feed on read approach, get all recs from friends
+//Feed on read approach, get all posts from friends
 router.get(
   '/friends',
   asyncHandler(async (req, res, next) => {
@@ -52,7 +52,7 @@ router.get(
   })
 )
 
-//get all complete recs from friends
+//get all created challenge posts from friends
 router.get(
   '/friends/created',
   asyncHandler(async (req, res, next) => {
@@ -70,7 +70,7 @@ router.get(
   })
 )
 
-//get all complete recs from friends
+//get all complete posts from friends
 router.get(
   '/friends/completed',
   asyncHandler(async (req, res, next) => {
