@@ -13,6 +13,9 @@ module.exports = db => {
         include: ['challengeCreator', db.model('place')]
       }),
       scopes: {
+        challengeCreator: () => ({
+          include: ['challengeCreator']
+        }),
         place: () => ({
           include: [{ model: db.model('place') }]
         }),
