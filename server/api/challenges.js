@@ -5,47 +5,65 @@ module.exports = router
 
 //TODO: add admin privelege options to necessary routes
 
-//get all challenges w/ complete & incomplete recs - ADMIN ROUTE
+//get all challenges w/ complete & incomplete posts - ADMIN ROUTE
 router.get(
   '/',
   asyncHandler(async (req, res, next) => {
-    const allChallenges = await Challenge.getAllChallenges()
+    const allChallenges = await Challenge.allChallenges()
     res.json(allChallenges)
   })
 )
 
-//get all challenges w/ recs & users who have completed the challenge - ADMIN ROUTE
+//get all challenges w/ posts & users who have accepted the challenge - ADMIN ROUTE
 router.get(
-  '/complete',
+  '/accepted',
   asyncHandler(async (req, res, next) => {
-    const completedChallenges = await Challenge.getAllChallenges(true)
-    res.json(completedChallenges)
-  })
-)
-//get all challenges w/ recs & users who have accepted the challenge - ADMIN ROUTE
-router.get(
-  '/incomplete',
-  asyncHandler(async (req, res, next) => {
-    const incompleteChallenges = await Challenge.getAllChallenges(false)
-    res.json(incompleteChallenges)
+    const acceptedChallenges = await Challenge.allChallengesAccepted()
+    res.json(acceptedChallenges)
   })
 )
 
-//get all challenges w/ complete recs by friends, can be used to show suggestions/activity
+//get all challenges w/ posts & users who have completed the challenge - ADMIN ROUTE
 router.get(
-  '/complete/friends',
+  '/completed',
   asyncHandler(async (req, res, next) => {
-    const completedChallenges = await Challenge.getFriendsChallenges(true, req.user)
+    const completedChallenges = await Challenge.allChallengesCompleted()
     res.json(completedChallenges)
   })
 )
 
-//get all challenges w/ accepted recs by friends, can be used to show suggestions and/or encourage people to try things together
+//get all challenges w/ activity by friends
 router.get(
-  '/incomplete/friends',
+  '/friends',
   asyncHandler(async (req, res, next) => {
-    const incompleteChallenges = await Challenge.getFriendsChallenges(false, req.user)
-    res.json(incompleteChallenges)
+    const friendsChallenges = await Challenge.friends(req.user)
+    res.json(friendsChallenges)
+  })
+)
+
+//get all challenges created by friends
+router.get(
+  '/friends/created',
+  asyncHandler(async (req, res, next) => {
+    const friendsCreated = await Challenge.friendsCreator(req.user)
+    res.json(friendsCreated)
+  })
+)
+
+//get all challenges accepted by friends, useful to show friend activity?
+router.get(
+  '/friends/accepted',
+  asyncHandler(async (req, res, next) => {
+    const friendsAccepted = await Challenge.friendsAccepted(req.user)
+    res.json(friendsAccepted)
+  })
+)
+
+router.get(
+  '/friends/completed',
+  asyncHandler(async (req, res, next) => {
+    const friendsCompleted = await Challenge.friendsCompleted(req.user)
+    res.json(friendsCompleted)
   })
 )
 
@@ -74,9 +92,15 @@ router.param(
   })
 )
 
-//return full challenge info including acceptees & completed by friends
+//return full challenge info w/ all accepted & completed posts
 router.get('/:id', async (req, res, next) => {
-  const challenge = await Challenge.getChallenge(req.user, req.challenge.id)
+  const challenge = await Challenge.fullChallengeInfo(req.params.id)
+  res.json(challenge)
+})
+
+//return full challenge info w/ all accepted & completed posts by friends
+router.get('/:id/friends', async (req, res, next) => {
+  const challenge = await Challenge.fullChallengeFriendsInfo(req.params.id, req.user)
   res.json(challenge)
 })
 
@@ -89,7 +113,7 @@ router.put(
   })
 )
 
-//delete challenge TODO: how to approach deleting challenge logic?
+//delete challenge TODO: how to approach deleting challenge logic? / set admin func for now
 router.delete(
   '/:id',
   asyncHandler(async (req, res, next) => {
