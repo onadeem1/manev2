@@ -8,11 +8,19 @@
   "scripts": {
     "lint": "eslint ./ --ignore-path .gitignore",
     "lint-fix": "npm run lint -- --fix",
+    "precommit": "lint-staged # un-comment to enable",
     "prettify": "prettier --write \"**/*.{js,jsx,json,css,scss,md}\"",
     "seed": "node database/seed.js",
     "start": "node server/index.js",
     "start-watch": "nodemon server/index.js --watch server --watch database --watch package.json",
     "start-dev": "cross-env NODE_ENV=development npm run start-watch"
+  },
+  "lint-staged": {
+    "*.{js,jsx}": [
+      "prettier --write",
+      "npm run lint-fix",
+      "git add"
+    ]
   },
   "dependencies": {
     "@google/maps": "^0.5.5",
@@ -36,6 +44,8 @@
     "eslint-config-fullstack": "^5.0.0",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-react": "^7.7.0",
+    "husky": "^0.14.3",
+    "lint-staged": "^7.2.0",
     "morgan": "^1.9.0",
     "nodemon": "^1.18.2",
     "prettier": "1.11.1"
