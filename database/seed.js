@@ -272,7 +272,7 @@ const postsData = ({ users, places, challenges }) => ({
     rating: 94,
     userId: users.danish.id,
     placeId: places.jetty.id,
-    challengeId: challenges['jetty'].id,
+    challengeId: challenges.jetty.id,
     complete: true
   },
   'omer accepts zoby raimo challenge': {
