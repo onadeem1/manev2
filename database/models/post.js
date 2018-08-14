@@ -43,11 +43,11 @@ module.exports = db => {
         accepted: {
           where: { complete: false }
         },
-        created: () => ({
+        created: (colName = 'post.userId') => ({
           include: [
             {
               model: db.model('challenge'),
-              where: { challengeCreatorId: { [Op.col]: 'post.userId' } }
+              where: { challengeCreatorId: { [Op.col]: colName } }
             }
           ]
         }),
@@ -74,6 +74,7 @@ module.exports = db => {
 
   /* instance methods */
 
+  //add the full place info to the post result
   Post.prototype.addGoog = async function() {
     const [plainPost, place] = await Promise.all([
       this.get({ plain: true }),
@@ -84,6 +85,7 @@ module.exports = db => {
 
   /* class methods */
 
+  //add the full place to an array of posts
   Post.addGoogMapper = function(posts) {
     return Promise.all(posts.map(post => post.addGoog()))
   }
