@@ -86,6 +86,19 @@ module.exports = db => {
     return this.addGoogMapper(posts)
   }
 
+  //get all posts created, original challenge post
+  Post.allCreated = function() {
+    const option = {
+      include: [
+        {
+          model: db.model('challenge'),
+          where: { challengeCreatorId: { [Op.col]: 'post.userId' } }
+        }
+      ]
+    }
+    return this.allPosts(option)
+  }
+
   //get all posts accepted
   Post.allAccepted = function() {
     return this.allPosts({ where: { complete: false } })
@@ -101,6 +114,19 @@ module.exports = db => {
     const ids = await user.getFriendAndUserIds()
     const posts = await this.scope('defaultScope', { method: ['friends', ids] }).findAll(option)
     return this.addGoogMapper(posts)
+  }
+
+  //get all friends completed
+  Post.friendsCreated = function(user) {
+    const option = {
+      include: [
+        {
+          model: db.model('challenge'),
+          where: { challengeCreatorId: { [Op.col]: 'post.userId' } }
+        }
+      ]
+    }
+    return this.friends(user, option)
   }
 
   //get all friends accepted
