@@ -43,6 +43,14 @@ module.exports = db => {
         accepted: {
           where: { complete: false }
         },
+        created: () => ({
+          include: [
+            {
+              model: db.model('challenge'),
+              where: { challengeCreatorId: { [Op.col]: 'post.userId' } }
+            }
+          ]
+        }),
         challenge: () => ({
           include: [db.model('challenge')]
         }),
@@ -81,62 +89,45 @@ module.exports = db => {
   }
 
   //get all posts
-  Post.allPosts = async function(option = {}) {
-    const posts = await this.findAll(option)
+  Post.allPosts = async function(scopes = []) {
+    const posts = await this.scope(['defaultScope', ...scopes]).findAll()
     return this.addGoogMapper(posts)
   }
 
   //get all posts created, original challenge post
   Post.allCreated = function() {
-    const option = {
-      include: [
-        {
-          model: db.model('challenge'),
-          where: { challengeCreatorId: { [Op.col]: 'post.userId' } }
-        }
-      ]
-    }
-    return this.allPosts(option)
+    return this.allPosts(['created'])
   }
 
   //get all posts accepted
   Post.allAccepted = function() {
-    return this.allPosts({ where: { complete: false } })
+    return this.allPosts(['accepted'])
   }
 
   //get all posts completed
   Post.allCompleted = function() {
-    return this.allPosts({ where: { complete: true } })
+    return this.allPosts(['completed'])
   }
 
   //get all friends posts
-  Post.friends = async function(user, option = {}) {
+  Post.friends = async function(user, scopes = []) {
     const ids = await user.getFriendAndUserIds()
-    const posts = await this.scope('defaultScope', { method: ['friends', ids] }).findAll(option)
-    return this.addGoogMapper(posts)
+    return this.allPosts([{ method: ['friends', ids] }, ...scopes])
   }
 
   //get all friends completed
   Post.friendsCreated = function(user) {
-    const option = {
-      include: [
-        {
-          model: db.model('challenge'),
-          where: { challengeCreatorId: { [Op.col]: 'post.userId' } }
-        }
-      ]
-    }
-    return this.friends(user, option)
+    return this.friends(user, ['created'])
   }
 
   //get all friends accepted
   Post.friendsAccepted = function(user) {
-    return this.friends(user, { where: { complete: false } })
+    return this.friends(user, ['accepted'])
   }
 
   //get all friends completed
   Post.friendsCompleted = function(user) {
-    return this.friends(user, { where: { complete: true } })
+    return this.friends(user, ['completed'])
   }
 
   //get a singlepost
