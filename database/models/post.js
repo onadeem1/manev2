@@ -28,111 +28,116 @@ module.exports = db => {
     },
     {
       defaultScope: () => ({
-        include: [db.model('place'), db.model('challenge')]
+        include: [
+          db.model('place'),
+          db.model('challenge'),
+          db.model('user'),
+          { model: db.model('post').scope('user'), as: 'linkedPost' }
+        ]
       }),
       scopes: {
-        complete: {
+        //repeating scopes used for variabliity in other models that may not need everything from the default scope
+        completed: {
+          where: { complete: true }
+        },
+        accepted: {
+          where: { complete: false }
+        },
+        challenge: () => ({
+          include: [db.model('challenge')]
+        }),
+        linkedPost: () => ({
+          include: [{ model: db.model('post').scope('user'), as: 'linkedPost' }]
+        }),
+        place: () => ({
+          include: [db.model('place')]
+        }),
+        user: () => ({
+          include: [db.model('user')]
+        }),
+        friends: ids => ({
           where: {
-            complete: true
+            userId: { [Op.in]: ids }
           }
-        },
-        incomplete: {
-          where: {
-            complete: false
-          }
-        },
-        challenge: function() {
-          return {
-            include: [db.model('challenge')]
-          }
-        },
-        user: function() {
-          return {
-            include: [db.model('user')]
-          }
-        },
-        friends: function(ids, completeBool) {
-          return {
-            where: {
-              userId: {
-                [Op.in]: ids
-              },
-              complete: completeBool
-            }
-          }
-        }
+        })
       }
     }
   )
 
-  Post.prototype.getPostWithGoogPlace = async function() {
-    const plainPost = await this.get({ plain: true })
-    const place = await this.place.combinePlaceInfo()
-    return Object.assign({}, plainPost, { place })
+  /* instance methods */
+
+  Post.prototype.addGoog = async function() {
+    const [plainPost, place] = await Promise.all([
+      this.get({ plain: true }),
+      this.place.combinePlaceInfo()
+    ])
+    return { ...plainPost, place }
   }
 
+  /* class methods */
+
+  Post.addGoogMapper = function(posts) {
+    return Promise.all(posts.map(post => post.addGoog()))
+  }
+
+  //get all posts
+  Post.allPosts = async function(option = {}) {
+    const posts = await this.findAll(option)
+    return this.addGoogMapper(posts)
+  }
+
+  //get all posts accepted
+  Post.allAccepted = function() {
+    return this.allPosts({ where: { complete: false } })
+  }
+
+  //get all posts completed
+  Post.allCompleted = function() {
+    return this.allPosts({ where: { complete: true } })
+  }
+
+  //get all friends posts
+  Post.friends = async function(user, option = {}) {
+    const ids = await user.getFriendAndUserIds()
+    const posts = await this.scope('defaultScope', { method: ['friends', ids] }).findAll(option)
+    return this.addGoogMapper(posts)
+  }
+
+  //get all friends accepted
+  Post.friendsAccepted = function(user) {
+    return this.friends(user, { where: { complete: false } })
+  }
+
+  //get all friends completed
+  Post.friendsCompleted = function(user) {
+    return this.friends(user, { where: { complete: true } })
+  }
+
+  //get a singlepost
   Post.getPost = async function(id) {
-    try {
-      const post = await this.scope('place', 'user', 'challenge').findById(id)
-      return post
-    } catch (error) {
-      console.error(error)
-    }
+    const post = await this.findById(id)
+    return post.addGoog()
   }
 
-  Post.createPost = async function({
-    place: placeInfo,
-    challenge: challengeInfo,
-    post: postInfo
-  }) {
-    try {
-      const place = await db.model('place').findOrCreate({ where: placeInfo })
-      challengeInfo = Object.assign(challengeInfo, { placeId: place[0].id })
-      const challenge = await db.model('challenge').create(challengeInfo)
-      postInfo = Object.assign(
-        postInfo,
-        { challengeId: challenge.id },
-        { userId: challenge.challengeCreatorId },
-        { placeId: place[0].id }
-      )
-      const post = this.create(postInfo)
-      return post
-    } catch (error) {
-      console.error(error)
+  //create a single post, used when creating a new challenge post
+  Post.createPost = async function({ place: placeInfo, challenge: challengeInfo, post: postInfo }) {
+    const place = await db.model('place').findOrCreate({ where: placeInfo })
+    challengeInfo = { ...challengeInfo, placeId: place[0].id }
+    const challenge = await db.model('challenge').create(challengeInfo)
+    postInfo = {
+      ...postInfo,
+      challengeId: challenge.id,
+      userId: challenge.challengeCreatorId,
+      placeId: place[0].id
     }
-  }
-
-  Post.getAllPosts = async function(options) {
-    try {
-      const posts = await this.scope('place', 'user', 'challenge').findAll(options)
-      const fullPosts = Promise.all(
-        posts.map(post => post.getPostWithGoogPlace())
-      )
-      return fullPosts
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  Post.getFriendsPosts = async function(user, options = {}) {
-    try {
-      const ids = await user.getFriendAndUserIds()
-      const posts = await this.scope('place', 'user', 'challenge', {
-        method: ['friends', ids]
-      }).findAll(options)
-      const fullPosts = await Promise.all(
-        posts.map(post => post.getPostWithGoogPlace())
-      )
-      return fullPosts
-    } catch (error) {
-      return Promise.reject(error)
-    }
+    return this.create(postInfo)
   }
 
   return Post
 }
 
 module.exports.associations = (Post, { Feed, User, Place, Challenge }) => {
+  Post.belongsTo(Post, { as: 'linkedPost' })
   Post.belongsTo(User)
   Post.belongsTo(Place)
   Post.belongsTo(Challenge)
