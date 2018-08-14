@@ -16,6 +16,15 @@ router.get(
   })
 )
 
+//get all original created challenge posts
+router.get(
+  '/created',
+  asyncHandler(async (req, res, next) => {
+    const created = await Post.allCreated()
+    res.json(created)
+  })
+)
+
 //get all incomplete posts aka accepted challenges
 router.get(
   '/accepted',
@@ -24,7 +33,8 @@ router.get(
     res.json(accepted)
   })
 )
-//get all complete posts aka completed challenges
+
+//get all complete posts aka completed challenges, includes created
 router.get(
   '/completed',
   asyncHandler(async (req, res, next) => {
@@ -39,6 +49,15 @@ router.get(
   asyncHandler(async (req, res, next) => {
     const friendsPosts = await Post.friends(req.user)
     res.json(friendsPosts)
+  })
+)
+
+//get all complete recs from friends
+router.get(
+  '/friends/created',
+  asyncHandler(async (req, res, next) => {
+    const friendsCreated = await Post.friendsCreated(req.user)
+    res.json(friendsCreated)
   })
 )
 
@@ -60,6 +79,7 @@ router.get(
   })
 )
 
+//create a new challenge w/ post
 router.post(
   //pass in req.body obj as { place: placeObj, challenge: challengeObj, post: postObj}
   '/',
