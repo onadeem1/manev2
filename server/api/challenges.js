@@ -14,6 +14,24 @@ router.get(
   })
 )
 
+//get all challenges w/ complete & incomplete posts - ADMIN ROUTE
+router.get(
+  '/sorted',
+  asyncHandler(async (req, res, next) => {
+    const allChallenges = await Challenge.allChallengesSorted()
+    res.json(allChallenges)
+  })
+)
+
+//get all challenges w/ posts & users who have accepted the challenge - ADMIN ROUTE
+router.get(
+  '/created',
+  asyncHandler(async (req, res, next) => {
+    const createdChallenges = await Challenge.allChallengesCreated()
+    res.json(createdChallenges)
+  })
+)
+
 //get all challenges w/ posts & users who have accepted the challenge - ADMIN ROUTE
 router.get(
   '/accepted',
@@ -41,11 +59,20 @@ router.get(
   })
 )
 
+//get all challenges w/ activity by friends sorted created/accepted/completed
+router.get(
+  '/friends/sorted',
+  asyncHandler(async (req, res, next) => {
+    const friendsChallenges = await Challenge.friendsSorted(req.user)
+    res.json(friendsChallenges)
+  })
+)
+
 //get all challenges created by friends
 router.get(
   '/friends/created',
   asyncHandler(async (req, res, next) => {
-    const friendsCreated = await Challenge.friendsCreator(req.user)
+    const friendsCreated = await Challenge.friendsCreated(req.user)
     res.json(friendsCreated)
   })
 )
@@ -59,6 +86,7 @@ router.get(
   })
 )
 
+//get all completed accepted by friends, useful to show friend activity?
 router.get(
   '/friends/completed',
   asyncHandler(async (req, res, next) => {
