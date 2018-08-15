@@ -12,9 +12,16 @@ module.exports = db => {
   }
 
   Feed.loadFeed = async function(user) {
+    const ids = await user.getFriendAndUserIds()
     const feed = await user.getFeedPosts({
       scope: ['place', 'user', 'linkedPost'],
-      include: [db.model('challenge').scope('challengeCreator')],
+      include: [
+        {
+          model: db.model('challenge').scope('challengeCreator', {
+            method: ['friends', 'allChallenges', false, ids, ['userId', 'original', 'complete']]
+          })
+        }
+      ],
       order: [[sequelize.col('feed.updatedAt'), 'DESC']]
     })
     //any way to limit this cause g is lame?
