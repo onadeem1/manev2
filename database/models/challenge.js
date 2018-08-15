@@ -19,31 +19,46 @@ module.exports = db => {
         place: () => ({
           include: [{ model: db.model('place') }]
         }),
-        posts: (alias, reqBool = true) => ({
-          include: [
-            { model: db.model('post').scope('user', 'linkedPost'), as: alias, required: reqBool }
-          ]
+        posts: (as, required = true) => ({
+          include: [{ model: db.model('post').scope('user', 'linkedPost'), as, required }]
         }),
-        friends: (alias, ids, extraScopes = [], reqBool = true) => ({
+        friends: (as, required = true, ids, attributes) => ({
           include: [
             {
-              model: db
-                .model('post')
-                .scope(['user', 'linkedPost', { method: ['friends', ids] }, ...extraScopes]),
-              as: alias,
-              required: reqBool
+              model: db.model('post').scope('user', 'linkedPost', { method: ['friends', ids] }),
+              as,
+              required,
+              attributes
+            }
+          ],
+          required: true
+        }),
+        friendCreator: ids => ({
+          include: [{ model: db.model('user'), as: 'challengeCreator' }],
+          where: { challengeCreatorId: { [Op.in]: ids } }
+        }),
+        innerJoin: ids => ({
+          //used to join when retrieving challenges by friends sorted in created/accepted/completed properties
+          include: [
+            {
+              model: db.model('post').scope({ method: ['friends', ids] }),
+              as: 'allChallenges',
+              attributes: ['id']
             }
           ]
-        }),
-        friendsCreator: ids => ({
-          //return challenges where creator is friend, might be redundant depends how we want the info
-          where: {
-            challengeCreatorId: { [Op.in]: ids }
-          }
         })
       }
     }
   )
+
+  /* helper method/s */
+
+  //easy way to create all scopes individualized
+  Challenge.scopeHelper = (friendsOrPosts, ids = []) => [
+    { method: [friendsOrPosts, 'created', false, ids] },
+    { method: [friendsOrPosts, 'accepted', false, ids] },
+    { method: [friendsOrPosts, 'completed', false, ids] }
+  ]
 
   /* instance methods */
 
@@ -51,7 +66,7 @@ module.exports = db => {
   Challenge.prototype.addGoogPlace = async function() {
     const [plainChallenge, place] = await Promise.all([
       this.get({ plain: true }),
-      this.place.combinePlaceInfo()
+      this.place.addGoog()
     ])
     return { ...plainChallenge, place }
   }
@@ -63,75 +78,77 @@ module.exports = db => {
     return Promise.all(challenges.map(challenge => challenge.addGoogPlace()))
   }
 
-  //get all challenges w/ all completed/accepted posts
+  //get all challenges sorted w/ created/accepted/completed posts
+  Challenge.allChallengesSorted = async function() {
+    const challenges = await this.scope('defaultScope', ...this.scopeHelper('posts')).findAll()
+    return this.mapGoogPlace(challenges)
+  }
+
+  //get all challenges w/ all completed/accepted/created posts on allChallenges property
   Challenge.allChallenges = async function(postAlias = 'allChallenges') {
     const challenges = await this.scope('defaultScope', { method: ['posts', postAlias] }).findAll()
     return this.mapGoogPlace(challenges)
   }
 
+  //get all challenges w/ created posts
+  Challenge.allChallengesCreated = function() {
+    return this.allChallenges('created')
+  }
+
   //get all challenges w/ accepted posts
   Challenge.allChallengesAccepted = function() {
-    return this.allChallenges('acceptedChallenges')
+    return this.allChallenges('accepted')
   }
 
   //get all challenges w/ completed posts
   Challenge.allChallengesCompleted = function() {
-    return this.allChallenges('completedChallenges')
+    return this.allChallenges('completed')
   }
 
-  //get all challenges created by a friend
-  Challenge.friendsCreator = async function(user) {
+  Challenge.friendsSorted = async function(user) {
     const ids = await user.getFriendAndUserIds()
-    const challenges = await this.scope('defaultScope', {
-      method: ['friendsCreator', ids]
+    const challenges = await this.scope('defaultScope', ...this.scopeHelper('friends', ids), {
+      method: ['innerJoin', ids]
     }).findAll()
     return this.mapGoogPlace(challenges)
   }
 
   //get all challenges created/accepted/completed by a friend
-  Challenge.friends = async function(user, postAlias = 'allChallenges', extraScopes = []) {
+  Challenge.friends = async function(user, postAlias = 'allChallenges') {
     const ids = await user.getFriendAndUserIds()
-    const challenges = await this.scope([
-      'defaultScope',
-      { method: ['friends', postAlias, ids, extraScopes] }
-    ]).findAll()
-    return challenges //TODO: ADD THE MAPPER
+    const challenges = await this.scope('defaultScope', {
+      method: ['friends', postAlias, true, ids]
+    }).findAll()
+    return this.mapGoogPlace(challenges)
   }
 
-  //get all challenges created by friend as post info
+  //get all challenges created by a friend
   Challenge.friendsCreated = function(user) {
-    return this.friends(user, 'createdChallenges', [
-      { method: ['created', 'createdChallenges.userId'] }
-    ])
+    return this.friends(user, 'created')
   }
 
   //get all challenges accepted by a friend
   Challenge.friendsAccepted = function(user) {
-    return this.friends(user, 'acceptedChallenges')
+    return this.friends(user, 'accepted')
   }
 
   //get all challenges completed by a friend
   Challenge.friendsCompleted = function(user) {
-    return this.friends(user, 'completedChallenges')
+    return this.friends(user, 'completed')
   }
 
-  //get a challenge w/ the accepted & completed posts
+  //get a challenge w/ the created/accepted/completed posts
   Challenge.fullChallengeInfo = async function(id) {
-    const challenge = await this.scope(
-      'defaultScope',
-      { method: ['posts', 'completedChallenges', false] },
-      { method: ['posts', 'acceptedChallenges', false] }
-    ).findById(id)
+    const challenge = await this.scope('defaultScope', ...this.scopeHelper('posts')).findById(id)
     return challenge.addGoogPlace()
   }
 
-  //get a challenge w/ the accepted & completed posts by friends
+  //get a challenge w/ the created/accepted/completed posts by friends
   Challenge.fullChallengeFriendsInfo = async function(id, user) {
     const ids = await user.getFriendAndUserIds()
     const challenge = await this.scope(
       'defaultScope',
-      { method: ['friends', 'completedChallenges', ids, [], false] },
-      { method: ['friends', 'acceptedChallenges', ids, [], false] }
+      ...this.scopeHelper('friends', ids)
     ).findById(id)
     return challenge.addGoogPlace()
   }
@@ -140,12 +157,9 @@ module.exports = db => {
 }
 module.exports.associations = (Challenge, { User, Post, Place }) => {
   Challenge.hasMany(Post, { as: 'allChallenges' })
-  Challenge.hasMany(Post.scope('accepted'), {
-    as: 'acceptedChallenges',
-    scope: { complete: false }
-  })
-  Challenge.hasMany(Post, { as: 'completedChallenges', scope: { complete: true } })
-  Challenge.hasMany(Post, { as: 'createdChallenges' })
+  Challenge.hasMany(Post, { as: 'created', scope: { original: true } })
+  Challenge.hasMany(Post, { as: 'accepted', scope: { complete: false } })
+  Challenge.hasMany(Post, { as: 'completed', scope: { original: false, complete: true } })
   Challenge.belongsTo(Place)
   Challenge.belongsTo(User, { as: 'challengeCreator' })
 }
