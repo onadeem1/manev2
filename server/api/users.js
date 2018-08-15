@@ -12,6 +12,15 @@ router.get(
   })
 )
 
+//get all users with all their created/accepted/completed challenges & fav places ADMIN
+router.get(
+  '/full',
+  asyncHandler(async (req, res, next) => {
+    const allUsers = await User.allUsersFull()
+    res.json(allUsers)
+  })
+)
+
 //create new user
 router.post(
   '/',
@@ -21,7 +30,7 @@ router.post(
   })
 )
 
-//get user on request object for future id specific requests
+// get user on request object for future id specific requests
 router.param(
   'id',
   asyncHandler(async (req, res, next, id) => {
@@ -49,7 +58,7 @@ router.get(
 router.get(
   '/:id/full',
   asyncHandler(async (req, res, next) => {
-    const user = await User.fullUserInfo(req.params.id)
+    const user = await req.requestedUser.fullUser()
     res.json(user)
   })
 )
