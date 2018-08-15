@@ -21,6 +21,10 @@ module.exports = db => {
           max: 100
         }
       },
+      original: {
+        type: BOOLEAN,
+        defaultValue: false
+      },
       complete: {
         type: BOOLEAN,
         defaultValue: false
@@ -30,29 +34,24 @@ module.exports = db => {
       defaultScope: () => ({
         include: [
           db.model('place'),
-          db.model('challenge'),
+          db.model('challenge').scope('challengeCreator'),
           db.model('user'),
           { model: db.model('post').scope('user'), as: 'linkedPost' }
         ]
       }),
       scopes: {
         //repeating scopes used for variabliity in other models that may not need everything from the default scope
-        completed: {
-          where: { complete: true }
+        created: {
+          where: { original: true }
         },
         accepted: {
           where: { complete: false }
         },
-        created: (colName = 'post.userId') => ({
-          include: [
-            {
-              model: db.model('challenge'),
-              where: { challengeCreatorId: { [Op.col]: colName } }
-            }
-          ]
-        }),
+        completed: {
+          where: { complete: true, original: false }
+        },
         challenge: () => ({
-          include: [db.model('challenge')]
+          include: [db.model('challenge').scope('challengeCreator')]
         }),
         linkedPost: () => ({
           include: [{ model: db.model('post').scope('user'), as: 'linkedPost' }]
@@ -141,7 +140,7 @@ module.exports = db => {
   //create a single post, used when creating a new challenge post
   Post.createPost = async function({ place: placeInfo, challenge: challengeInfo, post: postInfo }) {
     const place = await db.model('place').findOrCreate({ where: placeInfo })
-    challengeInfo = { ...challengeInfo, placeId: place[0].id }
+    challengeInfo = { ...challengeInfo, placeId: place[0].id, original: true }
     const challenge = await db.model('challenge').create(challengeInfo)
     postInfo = {
       ...postInfo,
