@@ -57,21 +57,23 @@ module.exports = db => {
         created: () => ({
           include: [
             {
-              model: db.model('challenge').scope('place'),
+              model: db.model('post').scope('place', 'linkedPost', 'challenge'),
               as: 'createdChallenges'
             }
           ]
         }),
-        post: () => ({
-          include: [{ model: db.model('post') }]
-        }),
         accepted: () => ({
-          include: [{ model: db.model('post'), as: 'acceptedChallenges' }]
+          include: [
+            {
+              model: db.model('post').scope('place', 'linkedPost', 'challenge'),
+              as: 'acceptedChallenges'
+            }
+          ]
         }),
         completed: () => ({
           include: [
             {
-              model: db.model('post').scope('linkedPost', 'defaultScope'),
+              model: db.model('post').scope('place', 'linkedPost', 'challenge'),
               as: 'completedChallenges'
             }
           ]
@@ -85,27 +87,54 @@ module.exports = db => {
 
   /* instance methods */
 
+  //check if the user password is correct
   User.prototype.correctPassword = function(candidatePwd) {
     return User.encryptPassword(candidatePwd, this.salt()) === this.password()
   }
 
+  //get all the posts the user created as an original challenge
   User.prototype.createdChallenges = async function() {
     const createdChallenges = await this.getCreatedChallenges({
-      scope: ['place']
+      scope: ['place', 'linkedPost', 'challenge']
     })
-    return Promise.all(createdChallenges.map(challenge => challenge.getChallengeWithGoogPlace()))
+    return db.model('post').addGoogMapper(createdChallenges)
   }
 
+  //get all the user's accepted challenges
   User.prototype.acceptedChallenges = async function() {
-    const acceptedChallenges = await this.getAcceptedChallenges()
-    return Promise.all(acceptedChallenges.map(post => post.getPostWithGoogPlace()))
+    const acceptedChallenges = await this.getAcceptedChallenges({
+      scope: ['place', 'linkedPost', 'challenge']
+    })
+    return db.model('post').addGoogMapper(acceptedChallenges)
   }
 
+  //get all the user's completed challenges
   User.prototype.completedChallenges = async function() {
-    const completedChallenges = await this.getCompletedChallenges()
-    return Promise.all(completedChallenges.map(post => post.getPostWithGoogPlace()))
+    const completedChallenges = await this.getCompletedChallenges({
+      scope: ['place', 'linkedPost', 'challenge']
+    })
+    return db.model('post').addGoogMapper(completedChallenges)
   }
 
+  //load all info relative to user as a single object (includes created/accepted/completed challenges & fav places)
+  User.prototype.fullUser = async function() {
+    const [
+      user,
+      createdChallenges,
+      acceptedChallenges,
+      completedChallenges,
+      favoritePlaces
+    ] = await Promise.all([
+      this.get({ plain: true }),
+      this.createdChallenges(),
+      this.acceptedChallenges(),
+      this.completedChallenges(),
+      this.getFavoritePlaces()
+    ])
+    return { ...user, createdChallenges, acceptedChallenges, completedChallenges, favoritePlaces }
+  }
+
+  //get all user's friend id's, useful for filtering on other models by friends
   User.prototype.getFriendIds = async function() {
     const friends = await this.getFriends({
       attributes: ['id'],
@@ -114,33 +143,32 @@ module.exports = db => {
     return friends.map(friend => friend.id)
   }
 
+  //add the user's id to the friends id's since we want user to see his own posts in feed etc.
   User.prototype.getFriendAndUserIds = async function() {
     return [this.id, ...(await this.getFriendIds())]
   }
 
   /* friendship helper method */
   const friendsOptions = (accepted, originalRequest) => ({
-    through: {
-      where: {
-        accepted,
-        originalRequest
-      }
-    }
+    through: { where: { accepted, originalRequest } }
   })
 
-  //friendship related instance methods, logic doesn't work in scopes ?! :(
+  //get a list of all friends
   User.prototype.allFriends = function() {
     return this.getFriends(friendsOptions(true))
   }
 
+  //get a list of friend requests received
   User.prototype.friendRequests = function() {
     return this.getFriends(friendsOptions(false, false))
   }
 
+  //get a list of friend requests sent to other users
   User.prototype.friendsRequested = function() {
     return this.getFriends(friendsOptions(false, true))
   }
 
+  //request a friend, two way action for easy fetching by each user
   User.prototype.requestFriend = async function(friendId) {
     const friend = await User.findById(friendId)
     const userRequest = await this.addFriend(friend, { through: { originalRequest: true } })
@@ -148,6 +176,7 @@ module.exports = db => {
     return [...userRequest, ...friendRequest]
   }
 
+  //confirm the friend request, should only be available to one user
   User.prototype.confirmFriend = async function(friendId) {
     const friend = await User.findById(friendId)
     const userConfirm = await this.addFriend(friend, {
@@ -161,18 +190,17 @@ module.exports = db => {
     return [...userConfirm[1], ...friendConfirm[1]] //return only the models from the update
   }
 
+  //delete a friend, remove two way relationship
   User.prototype.deleteFriend = async function(friendId) {
     const friend = await User.findById(friendId)
-    await this.removeFriend(friend)
-    await friend.removeFriend(this)
+    await Promise.all([this.removeFriend(friend), friend.removeFriend(this)])
     return 'succesfully deleted friend'
   }
 
+  //get all the users in our system that are in the user's contacts as potential friends
   User.prototype.potentialFriendsInContacts = async function(phoneNumbers) {
     const users = await User.findAll({
-      where: {
-        phone: { [Op.in]: phoneNumbers }
-      }
+      where: { phone: { [Op.in]: phoneNumbers } }
     })
     //we are looking for users who are not already friends
     return Promise.filter(users, user => this.hasFriend(user).then(bool => !bool))
@@ -180,31 +208,18 @@ module.exports = db => {
 
   /* class methods */
 
-  User.fullUserInfo = async function(id) {
-    const user = await User.scope('created', 'accepted', 'completed', 'favPlaces').findById(id)
-    const plainUser = user.get({ plain: true })
-    //add the goog place info to all posts/challenges
-    const createdChallengesUpdate = Promise.all(
-      user.createdChallenges.map(challenge => challenge.getChallengeWithGoogPlace())
-    )
-    const acceptedChallengesUpdate = Promise.all(
-      user.acceptedChallenges.map(post => post.getPostWithGoogPlace())
-    )
-    const completedChallengesUpdate = Promise.all(
-      user.completedChallenges.map(post => post.getPostWithGoogPlace())
-    )
-    const [createdChallenges, acceptedChallenges, completedChallenges] = await Promise.all([
-      createdChallengesUpdate,
-      acceptedChallengesUpdate,
-      completedChallengesUpdate
-    ])
-    return { ...plainUser, createdChallenges, acceptedChallenges, completedChallenges }
+  //find all the users with all of their challenge & place information
+  User.allUsersFull = async function() {
+    const users = await User.scope('created', 'accepted', 'completed', 'favPlaces').findAll()
+    return users
   }
 
+  //create a random salt for encryption
   User.generateSalt = function() {
     return crypto.randomBytes(16).toString('base64')
   }
 
+  //use node crypto to create a hash and encrypt the user password using hash & a salt
   User.encryptPassword = function(plainText, salt) {
     return crypto
       .createHash('RSA-SHA256')
@@ -215,6 +230,7 @@ module.exports = db => {
 
   /* hooks */
 
+  //function used to generate new encrypted pw anytime pw is changed
   const setSaltAndPassword = user => {
     if (user.changed('password')) {
       user.salt = User.generateSalt()
@@ -222,6 +238,7 @@ module.exports = db => {
     }
   }
 
+  //hook will run before these options on the User model
   User.beforeCreate(setSaltAndPassword)
   User.beforeUpdate(setSaltAndPassword)
 
@@ -230,10 +247,11 @@ module.exports = db => {
 
 module.exports.associations = (User, { Post, Challenge, Friendship, Feed, Place }) => {
   User.belongsToMany(User, { through: Friendship, as: 'friends' })
-  User.hasMany(Post)
+  User.hasMany(Post, { as: 'allPosts' })
+  User.hasMany(Post, { as: 'createdChallenges', scope: { original: true } })
   User.hasMany(Post, { as: 'acceptedChallenges', scope: { complete: false } })
-  User.hasMany(Post, { as: 'completedChallenges', scope: { complete: true } })
-  User.hasMany(Challenge, { as: 'createdChallenges', foreignKey: 'challengeCreatorId' })
+  User.hasMany(Post, { as: 'completedChallenges', scope: { complete: true, original: false } })
+  User.hasMany(Challenge, { as: 'challengeCreator', foreignKey: 'challengeCreatorId' })
   User.belongsToMany(Post, { through: Feed, as: 'feedPosts' })
   User.belongsToMany(Place, { through: 'favPlaces', as: 'favoritePlaces' })
 }
