@@ -3,7 +3,7 @@ const gMaps = require('../../gMaps')
 
 //helper to generate scope with all challenge/post possibilities
 const scopeGenerator = (scope, ids = []) => {
-  const asOptions = ['created', 'accepted', 'completed']
+  const asOptions = ['createdChallenges', 'acceptedChallenges', 'completedChallenges']
   const include = asOptions.map(as => scope(as, false, ids).include[0])
   return { include }
 }
@@ -126,17 +126,17 @@ module.exports = db => {
 
   //get all places with created challenges
   Place.allPlacesCreated = function() {
-    return this.allPlaces('created')
+    return this.allPlaces('createdChallenges')
   }
 
   //get all places with accepted challenges
   Place.allPlacesAccepted = function() {
-    return this.allPlaces('accepted')
+    return this.allPlaces('acceptedChallenges')
   }
 
   //get all places with completed challenges
   Place.allPlacesCompleted = function() {
-    return this.allPlaces('completed')
+    return this.allPlaces('completedChallenges')
   }
 
   //show all the places with all created/accepted/completed challenges by friends
@@ -163,17 +163,17 @@ module.exports = db => {
 
   //get all places with created challenges by friends
   Place.friendsCreated = function(user) {
-    return this.friendsPlaces(user, 'created')
+    return this.friendsPlaces(user, 'createdChallenges')
   }
 
   //get all places with accepted challenges by friends
   Place.friendsAccepted = function(user) {
-    return this.friendsPlaces(user, 'accepted')
+    return this.friendsPlaces(user, 'acceptedChallenges')
   }
 
   //get all places with completed challenges by friends
   Place.friendsCompleted = function(user) {
-    return this.friendsPlaces(user, 'completed')
+    return this.friendsPlaces(user, 'completedChallenges')
   }
 
   //get a place with all created/accepted/completed challenges, can query by id or googId
@@ -197,9 +197,9 @@ module.exports = db => {
 
 module.exports.associations = (Place, { Post, Challenge, User }) => {
   Place.hasMany(Post, { as: 'all' })
-  Place.hasMany(Post, { as: 'created', scope: { original: true } })
-  Place.hasMany(Post, { as: 'accepted', scope: { complete: false } })
-  Place.hasMany(Post, { as: 'completed', scope: { original: false, complete: true } })
+  Place.hasMany(Post, { as: 'createdChallenges', scope: { original: true } })
+  Place.hasMany(Post, { as: 'acceptedChallenges', scope: { complete: false } })
+  Place.hasMany(Post, { as: 'completedChallenges', scope: { original: false, complete: true } })
   Place.hasMany(Challenge)
   Place.belongsToMany(User, { through: 'favPlaces' })
 }

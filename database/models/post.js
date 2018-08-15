@@ -75,10 +75,7 @@ module.exports = db => {
 
   //add the full place info to the post result
   Post.prototype.addGoog = async function() {
-    const [plainPost, place] = await Promise.all([
-      this.get({ plain: true }),
-      this.place.combinePlaceInfo()
-    ])
+    const [plainPost, place] = await Promise.all([this.get({ plain: true }), this.place.addGoog()])
     return { ...plainPost, place }
   }
 
