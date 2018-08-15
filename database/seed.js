@@ -222,7 +222,8 @@ const postsData = ({ users, places, challenges }) => ({
     userId: users.zoby.id,
     placeId: places.raimos.id,
     challengeId: challenges['grandma slice'].id,
-    complete: true
+    complete: true,
+    original: true
   },
   'shack shack is the goat': {
     review: 'still the best burger in new york but the chicken shack might be even better',
@@ -231,7 +232,8 @@ const postsData = ({ users, places, challenges }) => ({
     userId: users.omer.id,
     placeId: places.shakeShack.id,
     challengeId: challenges['chicken shack'].id,
-    complete: true
+    complete: true,
+    original: true
   },
   'the shed for brunch': {
     review:
@@ -242,7 +244,8 @@ const postsData = ({ users, places, challenges }) => ({
     userId: users.maryam.id,
     placeId: places.theShed.id,
     challengeId: challenges['old fashioned'].id,
-    complete: true
+    complete: true,
+    original: true
   },
   'underground hip hop': {
     review:
@@ -252,7 +255,8 @@ const postsData = ({ users, places, challenges }) => ({
     userId: users.omer.id,
     placeId: places['205club'].id,
     challengeId: challenges['dance at the club'].id,
-    complete: true
+    complete: true,
+    original: true
   },
   'brooklyn bridge walk': {
     review:
@@ -263,7 +267,8 @@ const postsData = ({ users, places, challenges }) => ({
     userId: users.zain.id,
     placeId: places.brooklynBridge.id,
     challengeId: challenges['walk the bridge'].id,
-    complete: true
+    complete: true,
+    original: true
   },
   jetty: {
     review:
@@ -273,17 +278,20 @@ const postsData = ({ users, places, challenges }) => ({
     userId: users.danish.id,
     placeId: places.jetty.id,
     challengeId: challenges.jetty.id,
-    complete: true
+    complete: true,
+    original: true
   },
   'omer accepts zoby raimo challenge': {
     userId: users.omer.id,
     placeId: places.raimos.id,
-    challengeId: challenges['grandma slice'].id
+    challengeId: challenges['grandma slice'].id,
+    original: false
   },
   'omer accepts maryam shed challenge': {
     userId: users.omer.id,
     placeId: places.theShed.id,
-    challengeId: challenges['old fashioned'].id
+    challengeId: challenges['old fashioned'].id,
+    original: false
   },
   'omer completes zain brooklyn bridge challenge': {
     userId: users.omer.id,
@@ -291,7 +299,8 @@ const postsData = ({ users, places, challenges }) => ({
     rating: 88,
     placeId: places.brooklynBridge.id,
     review: 'loved it beautiful day, sorry zain I disagree brooklyn is awesome',
-    complete: true
+    complete: true,
+    original: false
   },
   'zain completes zoby grandma slice challenge': {
     userId: users.zain.id,
@@ -299,12 +308,14 @@ const postsData = ({ users, places, challenges }) => ({
     rating: 39,
     placeId: places.raimos.id,
     review: 'zoby this was awful what are you thinking',
-    complete: true
+    complete: true,
+    original: false
   },
   'zain accepts omer club challenge': {
     userId: users.zain.id,
     placeId: places['205club'].id,
-    challengeId: challenges['dance at the club'].id
+    challengeId: challenges['dance at the club'].id,
+    original: false
   },
   'zoby completes omer club challenge': {
     userId: users.zoby.id,
@@ -312,7 +323,8 @@ const postsData = ({ users, places, challenges }) => ({
     rating: 44,
     placeId: places['205club'].id,
     review: 'never heard any of these songs, why not just play Drake?',
-    complete: true
+    complete: true,
+    original: false
   },
   'zoby completes zain brooklyn bridge challenge': {
     userId: users.zoby.id,
@@ -320,7 +332,8 @@ const postsData = ({ users, places, challenges }) => ({
     rating: 91,
     placeId: places.brooklynBridge.id,
     review: 'I agree with Omer this was super nice, a little rit made it quite nice',
-    complete: true
+    complete: true,
+    original: false
   },
   'maryam completes omer club challenge': {
     userId: users.maryam.id,
@@ -329,12 +342,14 @@ const postsData = ({ users, places, challenges }) => ({
     placeId: places['205club'].id,
     review:
       'OMG this was like hearing a TRL playlist, just wish there was room to break it down :)',
-    complete: true
+    complete: true,
+    original: false
   },
   'maryam accepts zain brooklyn bridge challenge': {
     userId: users.maryam.id,
     placeId: places.brooklynBridge.id,
-    challengeId: challenges['walk the bridge'].id
+    challengeId: challenges['walk the bridge'].id,
+    original: false
   }
 })
 
