@@ -1,49 +1,53 @@
 const router = require('express').Router()
 const { Challenge } = require('../../database')
 const asyncHandler = require('../../server/utils')
+const { mustBeAdmin, selfOrAdminChallenge } = require('./filters')
 module.exports = router
 
-//TODO: add admin privelege options to necessary routes
-
-//get all challenges w/ complete & incomplete posts - ADMIN ROUTE
+//get all challenges w/ all info
 router.get(
   '/',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const allChallenges = await Challenge.allChallenges()
     res.json(allChallenges)
   })
 )
 
-//get all challenges w/ complete & incomplete posts - ADMIN ROUTE
+//get all challenges w/ complete/accepted/created posts
 router.get(
   '/sorted',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const allChallenges = await Challenge.allChallengesSorted()
     res.json(allChallenges)
   })
 )
 
-//get all challenges w/ posts & users who have accepted the challenge - ADMIN ROUTE
+//get all challenges w/ created posts
 router.get(
   '/created',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const createdChallenges = await Challenge.allChallengesCreated()
     res.json(createdChallenges)
   })
 )
 
-//get all challenges w/ posts & users who have accepted the challenge - ADMIN ROUTE
+//get all challenges w/ accepted posts
 router.get(
   '/accepted',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const acceptedChallenges = await Challenge.allChallengesAccepted()
     res.json(acceptedChallenges)
   })
 )
 
-//get all challenges w/ posts & users who have completed the challenge - ADMIN ROUTE
+//get all challenges w/ completed posts
 router.get(
   '/completed',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const completedChallenges = await Challenge.allChallengesCompleted()
     res.json(completedChallenges)
@@ -135,15 +139,17 @@ router.get('/:id/friends', async (req, res, next) => {
 //update challenge
 router.put(
   '/:id',
+  selfOrAdminChallenge,
   asyncHandler(async (req, res, next) => {
     const updatedChallenge = await req.challenge.update(req.body)
     res.status(200).json(updatedChallenge)
   })
 )
 
-//delete challenge TODO: how to approach deleting challenge logic? / set admin func for now
+//delete challenge, only allow admin delete for now
 router.delete(
   '/:id',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     await req.challenge.destroy()
     res.status(204).end()

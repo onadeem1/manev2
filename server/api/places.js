@@ -1,44 +1,53 @@
 const router = require('express').Router()
 const { Place, User } = require('../../database')
 const asyncHandler = require('../../server/utils')
+const { mustBeAdmin } = require('./filters')
 module.exports = router
 
-//TODO: change route names when admin is split out so its easier
-//TODO: most of teh all routes are admin and for our own analysis
+//get all places with all posts in an all property
 router.get(
   '/',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const allPlaces = await Place.allPlaces()
     res.json(allPlaces)
   })
 )
 
+//get all places with created/accepted/completed sorted
 router.get(
   '/sorted',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const allPlaces = await Place.allPlacesSorted()
     res.json(allPlaces)
   })
 )
 
+//get all places with created challenges
 router.get(
   '/created',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const allPlaces = await Place.allPlacesCreated()
     res.json(allPlaces)
   })
 )
 
+//get all places with accepted challenges
 router.get(
   '/accepted',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const allPlaces = await Place.allPlacesAccepted()
     res.json(allPlaces)
   })
 )
 
+//get all places with completed challenges
 router.get(
   '/completed',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const allPlaces = await Place.allPlacesCompleted()
     res.json(allPlaces)
@@ -125,7 +134,7 @@ router.get('/:id', (req, res, next) => {
   res.json(req.place)
 })
 
-//get single place w/ all created, completed, accepted challenges by friends
+//get single place w/ all created, completed, accepted challenges
 router.get(
   '/:id/full',
   asyncHandler(async (req, res, next) => {
@@ -135,7 +144,7 @@ router.get(
   })
 )
 
-//get a place by googleid w/ friend recs
+//get a place by googleid w/ full info
 router.get(
   '/google/:googleId',
   asyncHandler(async (req, res, next) => {
@@ -144,6 +153,7 @@ router.get(
   })
 )
 
+//get single place w/ all created/accepted/completed by friends
 router.get(
   '/:id/full/friends',
   asyncHandler(async (req, res, next) => {
@@ -153,7 +163,7 @@ router.get(
   })
 )
 
-//get a place by googleid w/ friend recs
+//get a place by googleid w/ all created/accepted/completed by friends
 router.get(
   '/google/:googleId/friends',
   asyncHandler(async (req, res, next) => {
@@ -165,6 +175,7 @@ router.get(
 //update place
 router.put(
   '/:id',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const updatedPlace = await req.place.update(req.body)
     res.status(200).json(updatedPlace)
@@ -174,6 +185,7 @@ router.put(
 //delete place
 router.delete(
   '/:id',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     await req.place.destroy()
     res.status(204).end()

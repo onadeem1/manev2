@@ -1,11 +1,13 @@
 const router = require('express').Router()
 const { User, Feed } = require('../../database')
 const asyncHandler = require('../../server/utils')
+const { mustBeAdmin, selfOrAdmin } = require('./filters')
 module.exports = router
 
 //get all users
 router.get(
   '/',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const allUsers = await User.findAll()
     res.json(allUsers)
@@ -15,6 +17,7 @@ router.get(
 //get all users with all their created/accepted/completed challenges & fav places ADMIN
 router.get(
   '/full',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const allUsers = await User.allUsersFull()
     res.json(allUsers)
@@ -63,10 +66,21 @@ router.get(
   })
 )
 
-//update user
 router.put(
   '/:id',
+  selfOrAdmin,
   asyncHandler(async (req, res, next) => {
+    //for pw changes, can add two field check when changing to new pw also
+    if (req.body.oldPassword) {
+      if (!req.requestedUser.correctPassword(req.body.oldPassword))
+        res.status(401).send('Wrong password ')
+    }
+    //check against anyone changing themselves to an admin
+    if (req.body.isAdmin) {
+      if (!req.user.isAdmin) {
+        return res.status(401).send('What you doing yo? You must be an admin!')
+      }
+    }
     const updatedUser = await req.requestedUser.update(req.body)
     res.status(200).json(updatedUser)
   })
@@ -74,8 +88,8 @@ router.put(
 
 //delete user
 router.delete(
-  //TODO: self or admin route
   '/:id',
+  selfOrAdmin,
   asyncHandler(async (req, res, next) => {
     await req.requestedUser.destroy()
     res.status(204).end()
@@ -121,15 +135,27 @@ router.get(
 //add a favorite place
 router.post(
   '/:id/favoritePlaces',
+  selfOrAdmin,
   asyncHandler(async (req, res, next) => {
     const addFavoritePlace = await req.requestedUser.addFavoritePlace(req.body.place)
     res.status(201).json(addFavoritePlace)
   })
 )
 
+//delete a favorite place
+router.post(
+  '/:id/favoritePlaces/:placeId',
+  selfOrAdmin,
+  asyncHandler(async (req, res, next) => {
+    await req.requestedUser.deleteFavoritePlace(req.params.placeId)
+    res.status(204).end()
+  })
+)
+
 //load the user's feed
 router.get(
   '/:id/feed',
+  selfOrAdmin,
   asyncHandler(async (req, res, next) => {
     const feed = await Feed.loadFeed(req.requestedUser)
     res.json(feed)

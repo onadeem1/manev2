@@ -1,5 +1,6 @@
 const router = require('express').Router()
 const asyncHandler = require('../../server/utils')
+const { selfOrAdmin } = require('./filters')
 module.exports = router
 
 //load all friends
@@ -14,6 +15,7 @@ router.get(
 //load all friend requests you've received
 router.get(
   '/requests',
+  selfOrAdmin,
   asyncHandler(async (req, res, next) => {
     const friendRequests = await req.requestedUser.friendRequests()
     res.json(friendRequests)
@@ -23,6 +25,7 @@ router.get(
 //load all friend requests you've sent
 router.get(
   '/requested',
+  selfOrAdmin,
   asyncHandler(async (req, res, next) => {
     const friendsRequested = await req.requestedUser.friendsRequested()
     res.json(friendsRequested)
@@ -32,6 +35,7 @@ router.get(
 //send a friend request
 router.post(
   '/add',
+  selfOrAdmin,
   asyncHandler(async (req, res, next) => {
     const friendRequest = await req.requestedUser.requestFriend(req.body.friendId)
     res.status(201).json(friendRequest)
@@ -41,6 +45,7 @@ router.post(
 //confirm a new friend
 router.put(
   '/confirm',
+  selfOrAdmin,
   asyncHandler(async (req, res, next) => {
     const confirmFriendship = await req.requestedUser.confirmFriend(req.body.friendId)
     res.status(200).json(confirmFriendship)
@@ -50,6 +55,7 @@ router.put(
 //delete a friend or a friend request, same logic
 router.delete(
   '/delete/:friendId',
+  selfOrAdmin,
   asyncHandler(async (req, res, next) => {
     await req.requestedUser.deleteFriend(req.params.friendId)
     res.status(204).end()
@@ -59,6 +65,7 @@ router.delete(
 //load potential friends through contacts
 router.get(
   '/contacts',
+  selfOrAdmin,
   asyncHandler(async (req, res, next) => {
     const potentialFriends = await req.requestedUser.potentialFriendsInContacts(
       req.query.phoneNumbers

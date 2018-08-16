@@ -1,15 +1,16 @@
 const router = require('express').Router()
 const { Post, Feed } = require('../../database')
 const asyncHandler = require('../../server/utils')
+const { mustBeAdmin, selfOrAdminPost } = require('./filters')
 module.exports = router
 
-//TODO: add admin privelege options to necessary routes & selforAdmin to user specific routes
 //TODO: Test out write feeds at scale, is it ok after sending response? Load on read vs. write approach
 //TODO: see best way to send in create new post w/ new challenge & sometimes new place object
 
 //get all posts
 router.get(
   '/',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const allPosts = await Post.allPosts()
     res.json(allPosts)
@@ -19,6 +20,7 @@ router.get(
 //get all original created challenge posts
 router.get(
   '/created',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const created = await Post.allCreated()
     res.json(created)
@@ -28,6 +30,7 @@ router.get(
 //get all incomplete posts aka accepted challenges
 router.get(
   '/accepted',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const accepted = await Post.allAccepted()
     res.json(accepted)
@@ -37,6 +40,7 @@ router.get(
 //get all complete posts aka completed challenges, includes created
 router.get(
   '/completed',
+  mustBeAdmin,
   asyncHandler(async (req, res, next) => {
     const completed = await Post.allCompleted()
     res.json(completed)
@@ -125,6 +129,7 @@ router.get('/:id', async (req, res, next) => {
 //complete the challenge
 router.put(
   '/:id/complete',
+  selfOrAdminPost,
   asyncHandler(async (req, res, next) => {
     const completePost = await req.post.update(req.body)
     res.status(200).json(completePost)
@@ -135,6 +140,7 @@ router.put(
 //any non-completing the challenge update, ex. updating rating etc. don't write to feed
 router.put(
   '/:id',
+  selfOrAdminPost,
   asyncHandler(async (req, res, next) => {
     const updatedPost = await req.post.update(req.body)
     res.status(200).json(updatedPost)
@@ -144,6 +150,7 @@ router.put(
 //delete post
 router.delete(
   '/:id',
+  selfOrAdminPost,
   asyncHandler(async (req, res, next) => {
     await req.post.destroy()
     res.status(204).end()

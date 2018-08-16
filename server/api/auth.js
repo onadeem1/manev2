@@ -1,9 +1,11 @@
 const router = require('express').Router()
 const { User } = require('../../database')
+const asyncHandler = require('../../server/utils')
 module.exports = router
 
-router.post('/login', async (req, res, next) => {
-  try {
+router.post(
+  '/login',
+  asyncHandler(async (req, res, next) => {
     const user = await User.findOne({ where: { email: req.body.email } })
     if (!user) {
       console.log('No such user found:', req.body.email)
@@ -14,10 +16,8 @@ router.post('/login', async (req, res, next) => {
     } else {
       req.login(user, err => (err ? next(err) : res.json(user)))
     }
-  } catch (err) {
-    next(err)
-  }
-})
+  })
+)
 
 router.post('/signup', async (req, res, next) => {
   try {
