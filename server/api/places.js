@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const { Place, User } = require('../../database')
+const { Place } = require('../../database')
 const asyncHandler = require('../../server/utils')
 const { mustBeAdmin } = require('./filters')
 module.exports = router
@@ -69,7 +69,6 @@ router.get(
 router.get(
   '/friends/accepted',
   asyncHandler(async (req, res, next) => {
-    req.user = await User.findById(1)
     const friendsAcceptedPlaces = await Place.friendsAccepted(req.user)
     res.json(friendsAcceptedPlaces)
   })
@@ -79,7 +78,6 @@ router.get(
 router.get(
   '/friends/completed',
   asyncHandler(async (req, res, next) => {
-    req.user = await User.findById(1)
     const friendsCompletedPlaces = await Place.friendsCompleted(req.user)
     res.json(friendsCompletedPlaces)
   })
@@ -89,7 +87,6 @@ router.get(
 router.get(
   '/friends/all',
   asyncHandler(async (req, res, next) => {
-    req.user = await User.findById(1)
     const friendsAllPlaces = await Place.friendsPlaces(req.user)
     res.json(friendsAllPlaces)
   })
@@ -98,7 +95,6 @@ router.get(
 router.get(
   '/friends/all/sorted',
   asyncHandler(async (req, res, next) => {
-    req.user = await User.findById(1)
     const friendsAllPlaces = await Place.friendsPlacesSorted(req.user)
     res.json(friendsAllPlaces)
   })
@@ -138,7 +134,6 @@ router.get('/:id', (req, res, next) => {
 router.get(
   '/:id/full',
   asyncHandler(async (req, res, next) => {
-    req.user = await User.findById(1)
     const place = await Place.fullPlace({ id: req.params.id })
     res.json(place)
   })
@@ -157,7 +152,6 @@ router.get(
 router.get(
   '/:id/full/friends',
   asyncHandler(async (req, res, next) => {
-    req.user = await User.findById(1)
     const place = await Place.fullPlaceFriends(req.user, { id: req.params.id })
     res.json(place)
   })
