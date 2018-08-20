@@ -262,4 +262,18 @@ describe('User model', () => {
       })
     })
   })
+
+  describe('all User & class methods', () => {
+    it('returns all users each with all challenge keys', async () => {
+      const users = await User.allUsersFull()
+      expect(users.length).to.equal(7)
+      users.forEach(user => {
+        expect(user).to.include.all.keys(
+          'createdChallenges',
+          'acceptedChallenges',
+          'completedChallenges'
+        )
+      })
+    })
+  })
 })
