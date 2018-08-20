@@ -97,6 +97,7 @@ module.exports = db => {
     const createdChallenges = await this.getCreatedChallenges({
       scope: ['place', 'linkedPost', 'challenge']
     })
+    if (process.env.NODE_ENV === 'test') return createdChallenges
     return db.model('post').addGoogMapper(createdChallenges)
   }
 
@@ -105,6 +106,7 @@ module.exports = db => {
     const acceptedChallenges = await this.getAcceptedChallenges({
       scope: ['place', 'linkedPost', 'challenge']
     })
+    if (process.env.NODE_ENV === 'test') return acceptedChallenges
     return db.model('post').addGoogMapper(acceptedChallenges)
   }
 
@@ -113,6 +115,7 @@ module.exports = db => {
     const completedChallenges = await this.getCompletedChallenges({
       scope: ['place', 'linkedPost', 'challenge']
     })
+    if (process.env.NODE_ENV === 'test') return completedChallenges
     return db.model('post').addGoogMapper(completedChallenges)
   }
 
@@ -187,7 +190,8 @@ module.exports = db => {
       through: { accepted: true },
       returning: true
     })
-    return [...userConfirm[1], ...friendConfirm[1]] //return only the models from the update
+    let obj = [...userConfirm[1], ...friendConfirm[1]] //return only the models from the update
+    return obj
   }
 
   //delete a friend, remove two way relationship
