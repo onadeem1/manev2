@@ -3,6 +3,7 @@
   "extends": ["fullstack", "prettier", "prettier/react"],
   "rules": {
     "semi": 0,
-    "no-warning-comments": 0
+    "no-warning-comments": 0,
+    "max-nested-callbacks": 0
   }
 }
