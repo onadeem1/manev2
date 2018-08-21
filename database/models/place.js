@@ -114,14 +114,15 @@ module.exports = db => {
   //show all places with sorted posts by created/accepted/completed & challenges
   Place.allPlacesSorted = async function() {
     const places = await this.scope('challenge', 'postsAll').findAll()
+    if (process.env.NODE_ENV === 'test') return places
     return this.placesMapper(places)
   }
 
   //show all the places with all posts/challenges in an all property
   Place.allPlaces = async function(as = 'all') {
     const places = await this.scope('challenge', { method: ['posts', as] }).findAll()
-    return places
-    // return this.placesMapper(places)
+    if (process.env.NODE_ENV === 'test') return places
+    return this.placesMapper(places)
   }
 
   //get all places with created challenges
@@ -147,6 +148,7 @@ module.exports = db => {
       { method: ['friendsAll', ids] },
       { method: ['innerJoin', ids] }
     ).findAll()
+    if (process.env.NODE_ENV === 'test') return places
     return this.placesMapper(places)
   }
 
@@ -157,8 +159,8 @@ module.exports = db => {
       { method: ['friendsChallenge', ids] },
       { method: ['friends', as, true, ids] }
     ).findAll()
-    return places
-    // return this.placesMapper(places)
+    if (process.env.NODE_ENV === 'test') return places
+    return this.placesMapper(places)
   }
 
   //get all places with created challenges by friends
