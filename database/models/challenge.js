@@ -5,7 +5,8 @@ module.exports = db => {
     'challenge',
     {
       challengeText: {
-        type: STRING
+        type: STRING,
+        allowNull: false
       }
     },
     {
@@ -81,12 +82,14 @@ module.exports = db => {
   //get all challenges sorted w/ created/accepted/completed posts
   Challenge.allChallengesSorted = async function() {
     const challenges = await this.scope('defaultScope', ...this.scopeHelper('posts')).findAll()
+    if (process.env.NODE_ENV === 'test') return challenges
     return this.addGoogMapper(challenges)
   }
 
   //get all challenges w/ all completed/accepted/created posts on allChallenges property
   Challenge.allChallenges = async function(postAlias = 'allChallenges') {
     const challenges = await this.scope('defaultScope', { method: ['posts', postAlias] }).findAll()
+    if (process.env.NODE_ENV === 'test') return challenges
     return this.addGoogMapper(challenges)
   }
 
@@ -111,6 +114,7 @@ module.exports = db => {
     const challenges = await this.scope('defaultScope', ...this.scopeHelper('friends', ids), {
       method: ['innerJoin', ids]
     }).findAll()
+    if (process.env.NODE_ENV === 'test') return challenges
     return this.addGoogMapper(challenges)
   }
 
@@ -120,6 +124,7 @@ module.exports = db => {
     const challenges = await this.scope('defaultScope', {
       method: ['friends', postAlias, true, ids]
     }).findAll()
+    if (process.env.NODE_ENV === 'test') return challenges
     return this.addGoogMapper(challenges)
   }
 
@@ -141,6 +146,7 @@ module.exports = db => {
   //get a challenge w/ the created/accepted/completed posts
   Challenge.fullChallengeInfo = async function(id) {
     const challenge = await this.scope('defaultScope', ...this.scopeHelper('posts')).findById(id)
+    if (process.env.NODE_ENV === 'test') return challenge
     return challenge.addGoog()
   }
 
@@ -151,6 +157,7 @@ module.exports = db => {
       'defaultScope',
       ...this.scopeHelper('friends', ids)
     ).findById(id)
+    if (process.env.NODE_ENV === 'test') return challenge
     return challenge.addGoog()
   }
 
