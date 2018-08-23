@@ -54,7 +54,7 @@ describe('Place model', () => {
   describe('class methods related to finding all places', () => {
     let maryam, zoby
     beforeEach(async () => {
-      ;[zoby, maryam, erum] = await Promise.all([
+      ;[zoby, maryam] = await Promise.all([
         User.create({ email: 'zoby@zoby.com' }),
         User.create({ email: 'mimi@mimihouse.com' })
       ])

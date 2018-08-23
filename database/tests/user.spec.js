@@ -251,7 +251,7 @@ describe('User model', () => {
           .and.not.include(pizzaCreated.id)
       })
     })
-    describe('full User method', () => {
+    describe('fullUser method', () => {
       it('returns the user w/ challenges split out on the object', async () => {
         const omerFull = await omer.fullUser()
         expect(omerFull).to.include.all.keys(
@@ -263,7 +263,7 @@ describe('User model', () => {
     })
   })
 
-  describe('all User & class methods', () => {
+  describe('allUsersFull', () => {
     it('returns all users each with all challenge keys', async () => {
       const users = await User.allUsersFull()
       expect(users.length).to.equal(7)
