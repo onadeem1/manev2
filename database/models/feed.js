@@ -7,7 +7,7 @@ module.exports = db => {
 
   Feed.writeFeed = async function(user, postId) {
     const userIds = await user.getFriendAndUserIds()
-    const writeFeed = userIds.map(userId => Feed.upsert({ userId, postId }))
+    const writeFeed = userIds.map(userId => Feed.upsert({ userId, postId }, { returning: true }))
     return Promise.all(writeFeed)
   }
 
@@ -19,11 +19,13 @@ module.exports = db => {
         {
           model: db.model('challenge').scope('challengeCreator', {
             method: ['friends', 'allChallenges', false, ids, ['userId', 'original', 'complete']]
-          })
+          }),
+          required: false
         }
       ],
       order: [[sequelize.col('feed.updatedAt'), 'DESC']]
     })
+    if (process.env.NODE_ENV === 'test') return feed
     //any way to limit this cause g is lame?
     return Promise.all(feed.map(post => post.addGoog()))
   }

@@ -31,8 +31,7 @@ module.exports = db => {
               required,
               attributes
             }
-          ],
-          required: true
+          ]
         }),
         friendCreator: ids => ({
           include: [{ model: db.model('user'), as: 'challengeCreator' }],
